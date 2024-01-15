@@ -160,15 +160,12 @@ function displaySearchResults(data, button) {
     var resultsDiv = document.getElementById('searchResults');
     resultsDiv.innerHTML = ''; // Clear previous results
 
-    const maxItemsToShow = 12; // Maximum number of items to display
-    for (var i = 0; i < Math.min(items.length, maxItemsToShow); i++) {
-        // Create a new row for every two items
-        if (i % 3 === 0) {
-            var rowDiv = document.createElement('div');
-            rowDiv.className = 'result-row';
-            resultsDiv.appendChild(rowDiv);
-        }
+    var rowDiv = document.createElement('div');
+    rowDiv.className = 'result-row';
+    resultsDiv.appendChild(rowDiv);
 
+    const maxItemsToShow = 18; // Maximum number of items to display
+    for (var i = 0; i < Math.min(items.length, maxItemsToShow); i++) {
         var objectId = items[i].getAttribute('id');
         var name = items[i].getElementsByTagName('name')[0].getAttribute('value');
 
@@ -317,15 +314,11 @@ function searchLibrary(button) {
             var sortedGames = gamesData.sort((a, b) => a.name.localeCompare(b.name));
 
             var currentRow;
+            currentRow = document.createElement('div');
+            currentRow.className = 'result-row';
+            gamesDiv.appendChild(currentRow);
 
-            sortedGames.forEach((game, index) => {
-                // Create a new row for every three items
-                if (index % 3 === 0) {
-                    currentRow = document.createElement('div');
-                    currentRow.className = 'result-row';
-                    gamesDiv.appendChild(currentRow);
-                }
-
+            sortedGames.forEach((game) => {
                 var resultDiv = document.createElement('div');
                 resultDiv.className = 'result-item';
 
