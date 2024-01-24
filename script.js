@@ -58,7 +58,17 @@ function prepareData(data) {
         var name = items[i].getElementsByTagName('name')[0].textContent;
         var objectId = items[i].getAttribute('objectid');
         var objectIdNum = Number(objectId); // Convert objectId to a number
-        var thumbnail = items[i].getElementsByTagName('thumbnail')[0].textContent;
+
+        // Check if the thumbnail element exists
+        var thumbnailElements = items[i].getElementsByTagName('thumbnail');
+        var thumbnail = '';
+        if (thumbnailElements.length > 0) {
+            thumbnail = thumbnailElements[0].textContent;
+        } else {
+            // Set a default thumbnail or handle the absence of a thumbnail
+            thumbnail = 'https://raw.githubusercontent.com/FrogCon/Library/main/no-image.png';
+        }
+
         var status = 'N';
         extractedData.push({ name, objectId: objectIdNum, thumbnail, status });
     }
