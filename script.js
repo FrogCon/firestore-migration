@@ -1,5 +1,9 @@
 var globalXmlData = null;
 var ownerGamesVisibility = {};
+var currentActiveOverlays = {
+    websiteOverlay: null,
+    addActionOverlay: null
+};
 
 function getCollection() {
     var username = document.getElementById('bggUsername').value;
@@ -284,7 +288,41 @@ function displayGamesTab() {
             nameDiv.innerHTML = game.name;
             nameDiv.className = 'game-name';
 
-            resultDiv.onclick = createGameClickHandler(game, resultDiv);
+            // Create overlays but keep them hidden initially
+            var websiteOverlay = document.createElement('div');
+            websiteOverlay.style = 'position: absolute; top: 0; left: 0; width: 100%; height: 50%; background-color: rgba(255, 0, 0, 0.5); color: white; display: flex; justify-content: center; align-items: center; display: none; border-top-left-radius: 1rem; border-top-right-radius: 1rem; text-shadow: 2px 2px 4px #000000;';
+            var websiteText = document.createElement('span');
+            websiteText.textContent = 'View On BGG';
+            websiteText.style = `background-color: rgba(0, 0, 0, 0.5); padding: 0.5rem 1rem; border-radius: 0.5rem;`;
+            websiteOverlay.appendChild(websiteText);
+            websiteOverlay.onclick = function(event) {
+                window.open(`https://boardgamegeek.com/boardgame/${game.objectId}`, '_blank');
+                hideOverlays(websiteOverlay, addActionOverlay);
+                // Re-enable showing overlays on click
+                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+                event.stopPropagation(); // Prevent triggering clicks on underlying elements
+            };
+
+            var addActionOverlay = document.createElement('div');
+            addActionOverlay.style = 'position: absolute; bottom: 0; right: 0; width: 100%; height: 50%; background-color: rgba(0, 255, 0, 0.5); color: white; display: flex; justify-content: center; align-items: center; display: none;border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; text-shadow: 2px 2px 4px #000000;';
+            var addActionText = document.createElement('span');
+            addActionText.textContent = 'Add / Remove';
+            addActionText.style = `background-color: rgba(0, 0, 0, 0.5); padding: 0.5rem 1rem; border-radius: 0.5rem;`;
+            addActionOverlay.appendChild(addActionText);
+            addActionOverlay.onclick = function(event) {
+                createGameClickHandler(game, resultDiv)();
+                hideOverlays(websiteOverlay, addActionOverlay);
+                // Re-enable showing overlays on click
+                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+                event.stopPropagation(); // Prevent triggering clicks on underlying elements
+            };
+
+            resultDiv.style.position = 'relative';
+            resultDiv.appendChild(websiteOverlay);
+            resultDiv.appendChild(addActionOverlay);
+
+            // Initial click on the game item shows the overlays
+            resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
 
             resultDiv.appendChild(thumbnailImg);
             resultDiv.appendChild(nameDiv);
@@ -309,6 +347,42 @@ function displayGamesTab() {
             });
         });
     });
+}
+
+function showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay) {
+    return function() {
+        // If the clicked game is already showing its overlays, hide them
+        if (currentActiveOverlays.websiteOverlay === websiteOverlay &&
+            currentActiveOverlays.addActionOverlay === addActionOverlay &&
+            websiteOverlay.style.display !== 'none') {
+            hideCurrentActiveOverlays(); // This will hide the overlays and reset currentActiveOverlays
+        } else {
+            // Hide any currently active overlays before showing the new ones
+            hideCurrentActiveOverlays();
+            websiteOverlay.style.display = 'flex';
+            addActionOverlay.style.display = 'flex';
+            // Update current active overlays to the new ones
+            currentActiveOverlays.websiteOverlay = websiteOverlay;
+            currentActiveOverlays.addActionOverlay = addActionOverlay;
+        }
+    };
+}
+
+function hideOverlays(websiteOverlay, addActionOverlay) {
+    websiteOverlay.style.display = 'none';
+    addActionOverlay.style.display = 'none';
+}
+
+function hideCurrentActiveOverlays() {
+    if (currentActiveOverlays.websiteOverlay && currentActiveOverlays.addActionOverlay) {
+        currentActiveOverlays.websiteOverlay.style.display = 'none';
+        currentActiveOverlays.addActionOverlay.style.display = 'none';
+    }
+    // Reset current active overlays
+    currentActiveOverlays = {
+        websiteOverlay: null,
+        addActionOverlay: null
+    };
 }
 
 function searchLibrary(button) {
