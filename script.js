@@ -391,6 +391,7 @@ function searchLibrary(button) {
 
     if (selectedLibrary && selectedLibrary !== 'newLibrary') {
         showLoadingOverlay(); // Show the overlay before starting the fetch
+        document.getElementById('libraryResults').innerHTML = '';
 
         fetchExistingGames()
             .then(gamesData => {
