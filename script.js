@@ -601,6 +601,7 @@ function populateLibraryDropdown() {
 function handleLibraryChange() {
     var libraryDropdown = document.getElementById('libraryDropdown');
     var selectedValue = libraryDropdown.value;
+    document.getElementById('libraryResults').innerHTML = '';
 
     if (selectedValue === 'newLibrary') {
         var newLibraryName = prompt("Please enter a name for the new library:");
