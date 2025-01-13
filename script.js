@@ -390,44 +390,55 @@ function searchLibrary(button) {
     var selectedLibrary = libraryDropdown.value;
 
     if (selectedLibrary && selectedLibrary !== 'newLibrary') {
-        fetchExistingGames().then(gamesData => {
-            var gamesDiv = document.getElementById('libraryResults');
-            gamesDiv.innerHTML = ''; // Clear previous content and add title
+        showLoadingOverlay(); // Show the overlay before starting the fetch
 
-            // Sort the gamesData alphabetically
-            var sortedGames = gamesData.sort((a, b) => a.name.localeCompare(b.name));
+        fetchExistingGames()
+            .then(gamesData => {
+                var gamesDiv = document.getElementById('libraryResults');
+                gamesDiv.innerHTML = ''; // Clear previous content and add title
 
-            var currentRow;
-            currentRow = document.createElement('div');
-            currentRow.className = 'result-row';
-            gamesDiv.appendChild(currentRow);
+                // Sort the gamesData alphabetically
+                var sortedGames = gamesData.sort((a, b) => a.name.localeCompare(b.name));
 
-            sortedGames.forEach((game) => {
-                var resultDiv = document.createElement('div');
-                resultDiv.className = 'result-item';
+                var currentRow;
+                currentRow = document.createElement('div');
+                currentRow.className = 'result-row';
+                gamesDiv.appendChild(currentRow);
 
-                // Check the fourth column data and change background color if it's 'Y'
-                if (game.status === 'Y') {
-                    resultDiv.style.backgroundColor = 'green';
-                }
+                sortedGames.forEach((game) => {
+                    var resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-item';
 
-                var thumbnailImg = document.createElement('img');
-                thumbnailImg.src = game.thumbnail; // Assuming thumbnail URL is available
-                thumbnailImg.alt = game.name;
-                thumbnailImg.className = 'thumbnail-img';
+                    // Check the fourth column data and change background color if it's 'Y'
+                    if (game.status === 'Y') {
+                        resultDiv.style.backgroundColor = 'green';
+                    }
 
-                var nameDiv = document.createElement('div');
-                nameDiv.innerHTML = game.name;
-                nameDiv.className = 'game-name';
+                    var thumbnailImg = document.createElement('img');
+                    thumbnailImg.src = game.thumbnail; // Assuming thumbnail URL is available
+                    thumbnailImg.alt = game.name;
+                    thumbnailImg.className = 'thumbnail-img';
 
-                resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
+                    var nameDiv = document.createElement('div');
+                    nameDiv.innerHTML = game.name;
+                    nameDiv.className = 'game-name';
 
-                resultDiv.appendChild(thumbnailImg);
-                resultDiv.appendChild(nameDiv);
+                    resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
 
-                currentRow.appendChild(resultDiv);
+                    resultDiv.appendChild(thumbnailImg);
+                    resultDiv.appendChild(nameDiv);
+
+                    currentRow.appendChild(resultDiv);
+                });
+
+                hideLoadingOverlay(); // Hide the overlay once loading is complete
+            })
+            .catch(error => {
+                alert('An error occurred while loading the library. Please try again.');
+                console.error(error);
+                hideLoadingOverlay(); // Ensure overlay is hidden on error
             });
-        });
+
         button.scrollIntoView({ behavior: 'smooth' });
     } else {
         alert('Select A Library First');
