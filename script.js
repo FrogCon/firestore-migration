@@ -5,6 +5,59 @@ var currentActiveOverlays = {
     addActionOverlay: null
 };
 
+// Initialize Auth0
+const auth0 = await createAuth0Client({
+    domain: 'dev-wfde0plcf7x2pcpa.us.auth0.com',
+    clientId: 'r3Dn3ZU5toVljUYGKU6qr9Fydk8z1K1H',
+    cacheLocation: 'localstorage', // Persist login even after a page refresh
+});
+
+// Login function
+async function handleLogin() {
+    await auth0.loginWithRedirect({
+        redirect_uri: window.location.origin,
+    });
+}
+
+// Handle login callback
+async function handleLoginCallback() {
+    const query = window.location.search;
+    if (query.includes('code=') && query.includes('state=')) {
+        await auth0.handleRedirectCallback();
+        window.history.replaceState({}, document.title, '/');
+    }
+}
+
+// Check login status and toggle UI
+async function checkAuthStatus() {
+    const isAuthenticated = await auth0.isAuthenticated();
+
+    if (isAuthenticated) {
+        const user = await auth0.getUser();
+        console.log('User:', user);
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+    } else {
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+    }
+}
+
+// Logout function
+async function handleLogout() {
+    await auth0.logout({
+        returnTo: window.location.origin,
+    });
+}
+
+// Run on page load
+(async () => {
+    await handleLoginCallback();
+    await checkAuthStatus();
+})();
+
+//End of Auth0 Scripts
+//Begin Library Scripts
 function getCollection() {
     var username = document.getElementById('bggUsername').value;
     var libraryDropdown = document.getElementById('libraryDropdown');
