@@ -115,8 +115,6 @@ window.addEventListener("click", (event) => {
 });
 
 // Get references to modal elements
-const loginModal = document.getElementById("loginModal");
-const closeLoginModal = document.getElementById("closeLoginModal");
 const loginButton = document.getElementById("loginButton");
 const submitLoginButton = document.getElementById("submitLoginButton");
 
