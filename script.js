@@ -8,51 +8,57 @@ var currentActiveOverlays = {
 async function initializeAuth() {
     if (typeof createAuth0Client === "undefined") {
         console.error("Auth0 SDK script not loaded.");
-        return;
-    }
-    const auth0 = await createAuth0Client({
-        domain: 'dev-wfde0plcf7x2pcpa.us.auth0.com',
-        clientId: 'r3Dn3ZU5toVljUYGKU6qr9Fydk8z1K1H',
-        cacheLocation: 'localstorage',
-    });
-    
-    // Handle login callback
-    const query = window.location.search;
-    if (query.includes('code=') && query.includes('state=')) {
-        await auth0.handleRedirectCallback();
-        window.history.replaceState({}, document.title, '/');
+        return; // Stop further execution
     }
 
-    // Check login status and toggle UI
-    const isAuthenticated = await auth0.isAuthenticated();
-    if (isAuthenticated) {
-        const user = await auth0.getUser();
-        console.log('User:', user);
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-    } else {
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('mainContent').style.display = 'none';
-    }
-
-    // Attach login and logout handlers globally
-    window.handleLogin = async () => {
-        await auth0.loginWithRedirect({
-            redirect_uri: window.location.origin,
+    try {
+        const auth0 = await createAuth0Client({
+            domain: 'dev-wfde0plcf7x2pcpa.us.auth0.com',
+            clientId: 'r3Dn3ZU5toVljUYGKU6qr9Fydk8z1K1H',
+            cacheLocation: 'localstorage', // Persist login even after a page refresh
         });
-    };
 
-    window.handleLogout = async () => {
-        await auth0.logout({
-            returnTo: window.location.origin,
-        });
-    };
+        console.log("Auth0 initialized successfully.");
+
+        // Handle login callback
+        const query = window.location.search;
+        if (query.includes('code=') && query.includes('state=')) {
+            await auth0.handleRedirectCallback();
+            window.history.replaceState({}, document.title, '/');
+        }
+
+        // Check login status and toggle UI
+        const isAuthenticated = await auth0.isAuthenticated();
+        if (isAuthenticated) {
+            const user = await auth0.getUser();
+            console.log('User:', user);
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        } else {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+        }
+
+        // Attach login and logout handlers globally
+        window.handleLogin = async () => {
+            await auth0.loginWithRedirect({
+                redirect_uri: window.location.origin,
+            });
+        };
+
+        window.handleLogout = async () => {
+            await auth0.logout({
+                returnTo: window.location.origin,
+            });
+        };
+    } catch (error) {
+        console.error("Error initializing Auth0:", error);
+    }
 }
 
-// Initialize authentication and ensure the library scripts can run afterward
+// Call the initializeAuth function
 initializeAuth().then(() => {
     console.log('Auth0 initialized successfully.');
-    // Add your library script logic here if it depends on authentication.
 });
 
 //End of Auth0 Scripts
