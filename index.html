@@ -55,20 +55,23 @@
             #loginForm {
                 display: flex;
                 flex-direction: column;
-                align-items: stretch;
+                align-items: center;
             }
             
             #loginForm label {
                 font-weight: bold;
                 margin-bottom: 5px;
+                align-self: flex-start;
             }
             
             #loginForm input {
+                width: 100%;
                 padding: 10px;
                 margin-bottom: 15px;
                 font-size: 14px;
                 border: 1px solid #ccc;
                 border-radius: 5px;
+                box-sizing: border-box;
             }
             
             #submitLoginButton {
@@ -85,6 +88,20 @@
                 background-color: #45a049;
             }
 
+            #signUpButton {
+                background-color: #007BFF; /* Blue color */
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 16px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-bottom: 10px;
+            }
+            
+            #signUpButton:hover {
+                background-color: #0056b3; /* Darker blue on hover */
+            }
 
             #libraryDropdown {
                 width: 75%;
@@ -274,16 +291,18 @@
                 <span id="closeLoginModal" class="close">&times;</span>
                 <h2>Login</h2>
                 <form id="loginForm">
-                    <label for="loginEmail">Email</label><br>
-                    <input type="email" id="loginEmail" placeholder="Email"><br><br>
+                    <label for="loginEmail">Email:</label><br>
+                    <input type="email" id="loginEmail" placeholder="Enter your email"><br><br>
         
-                    <label for="loginPassword">Password</label><br>
-                    <input type="password" id="loginPassword" placeholder="Password"><br><br>
-        
+                    <label for="loginPassword">Password:</label><br>
+                    <input type="password" id="loginPassword" placeholder="Enter your password"><br><br>
+
+                    <button id="signUpButton" type="button">Sign Up</button>
                     <button id="submitLoginButton" type="button">Submit</button>
                 </form>
             </div>
         </div>
+
 
         <div class="tab">
             <button id="homeTab" class="tablinks" data-tab="Home">Home</button>
