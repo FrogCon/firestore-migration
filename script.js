@@ -61,45 +61,6 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// Firestore Functions
-function saveAction(action) {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You must be logged in to perform this action.");
-        return;
-    }
-
-    const userDoc = doc(db, "actions", user.uid);
-    setDoc(userDoc, { actions: action }, { merge: true })
-        .then(() => {
-            console.log("Action saved successfully.");
-        })
-        .catch(error => {
-            console.error("Error saving action:", error.message);
-        });
-}
-
-function getUserActions() {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You must be logged in to view your actions.");
-        return;
-    }
-
-    const userDoc = doc(db, "actions", user.uid);
-    getDoc(userDoc)
-        .then(docSnap => {
-            if (docSnap.exists()) {
-                console.log("User actions:", docSnap.data());
-            } else {
-                console.log("No actions found for this user.");
-            }
-        })
-        .catch(error => {
-            console.error("Error retrieving actions:", error.message);
-        });
-}
-
 //Login Window
 const loginModal = document.getElementById("loginModal");
 const signUpModal = document.getElementById("signUpModal");
