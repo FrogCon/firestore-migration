@@ -57,10 +57,29 @@ async function initializeAuth() {
     }
 }
 
-// Call the initializeAuth function
+document.addEventListener("DOMContentLoaded", async () => {
+    if (typeof createAuth0Client === "undefined") {
+        console.log("Loading Auth0 SDK...");
+        const script = document.createElement("script");
+        script.src = "https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js";
+        script.onload = () => {
+            console.log("Auth0 SDK loaded successfully.");
+            initializeAuth(); // Only call initializeAuth after the script loads
+        };
+        script.onerror = () => {
+            console.error("Failed to load Auth0 SDK script.");
+        };
+        document.head.appendChild(script);
+    } else {
+        console.log("Auth0 SDK already loaded.");
+        initializeAuth();
+    }
+});
+
+/* Call the initializeAuth function
 initializeAuth().then(() => {
     console.log('This is not important...');
-});
+});*/
 
 //End of Auth0 Scripts
 //Begin Library Scripts
