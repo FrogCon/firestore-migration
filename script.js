@@ -135,6 +135,18 @@ window.addEventListener("click", (event) => {
     }
 });
 
+// Handle login
+submitLoginButton.addEventListener("click", () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    // Call the existing login function
+    login(email, password);
+
+    // Close the modal after a successful login (you can move this into the `.then` of your login function)
+    loginModal.style.display = "none";
+});
+
 // Define Library functions
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
