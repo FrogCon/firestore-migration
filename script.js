@@ -92,7 +92,7 @@ function getUserActions() {
         });
 }
 
-// Define the openTab function
+// Define Library functions
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
 
@@ -102,10 +102,22 @@ function openTab(evt, tabName) {
         tabcontent[i].style.display = "none";
     }
 
-    // Remove the "active" class from all buttons
+    // Remove the "active" clas from all buttons
     tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tablinks.length; i++) {
         tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    if (tabName === 'Games') {
+        displayGamesTab();
+    }
+
+    if (tabName === 'ModifyGames') {
+        populateLibraryDropdown();
+        document.getElementById('bggUsername').value = '';
+        document.getElementById('searchResults').innerHTML = '';
+        document.getElementById('bggSearchQuery').value = '';
+        document.getElementById('libraryResults').innerHTML = '';
     }
 
     // Show the selected tab and set the clicked button as active
