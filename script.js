@@ -35,7 +35,7 @@ function login(email, password) {
         })
         .catch(error => {
             console.error("Error during login:", error.message);
-            alert("Login failed: " + error.message);
+            alert("Login failed, try again...");
         });
 }
 
