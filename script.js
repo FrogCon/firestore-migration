@@ -19,6 +19,7 @@ function signUp(email, password) {
         .then(userCredential => {
             console.log("User signed up:", userCredential.user);
             login(email, password);
+            signUpModal.style.display = "none";
         })
         .catch(error => {
             console.error("Error during signup:", error.message);
@@ -219,11 +220,6 @@ document.getElementById("libraryDropdown").addEventListener("change", handleLibr
 document.getElementById("getCollectionButton").addEventListener("click", getCollection);
 document.getElementById("searchGamesButton").addEventListener("click", () => searchGames(document.getElementById("searchGamesButton")));
 document.getElementById("searchLibraryButton").addEventListener("click", () => searchLibrary(document.getElementById("searchLibraryButton")));
-document.getElementById("signUpButton").addEventListener("click", () => {
-    alert("Sign-Up button clicked!"); // Replace with actual sign-up logic
-});
-
-
 
 // Automatically open the default tab on page load
 document.getElementById("homeTab").click();
