@@ -62,14 +62,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Loading Auth0 SDK...");
         const script = document.createElement("script");
         script.src = "https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js";
-        script.onload = () => {
-            console.log("Auth0 SDK loaded successfully.");
-            initializeAuth(); // Only call initializeAuth after the script loads
-        };
-        script.onerror = () => {
-            console.error("Failed to load Auth0 SDK script.");
-        };
         document.head.appendChild(script);
+
+        // Wait for the script to load and createAuth0Client to be defined
+        let retries = 10; // Number of retries
+        const interval = 500; // Time between retries (ms)
+        const waitForCreateAuth0Client = () =>
+            new Promise((resolve, reject) => {
+                const check = () => {
+                    if (typeof createAuth0Client !== "undefined") {
+                        resolve();
+                    } else if (retries > 0) {
+                        retries--;
+                        setTimeout(check, interval);
+                    } else {
+                        reject(new Error("createAuth0Client not defined after retries"));
+                    }
+                };
+                check();
+            });
+
+        try {
+            await waitForCreateAuth0Client();
+            console.log("createAuth0Client is now defined.");
+            initializeAuth(); // Call initializeAuth after the function is available
+        } catch (error) {
+            console.error(error.message);
+        }
     } else {
         console.log("Auth0 SDK already loaded.");
         initializeAuth();
