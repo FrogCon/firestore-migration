@@ -6,13 +6,16 @@ var currentActiveOverlays = {
 };
 
 async function initializeAuth() {
-    // Initialize Auth0
+    if (typeof createAuth0Client === "undefined") {
+        console.error("Auth0 SDK script not loaded.");
+        return;
+    }
     const auth0 = await createAuth0Client({
         domain: 'dev-wfde0plcf7x2pcpa.us.auth0.com',
         clientId: 'r3Dn3ZU5toVljUYGKU6qr9Fydk8z1K1H',
-        cacheLocation: 'localstorage', // Persist login even after a page refresh
+        cacheLocation: 'localstorage',
     });
-
+    
     // Handle login callback
     const query = window.location.search;
     if (query.includes('code=') && query.includes('state=')) {
