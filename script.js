@@ -4,6 +4,14 @@ var currentActiveOverlays = {
     websiteOverlay: null,
     addActionOverlay: null
 };
+const loginModal = document.getElementById("loginModal");
+const signUpModal = document.getElementById("signUpModal");
+const closeLoginModal = document.getElementById("closeLoginModal");
+const closeSignUpModal = document.getElementById("closeSignUpModal");
+const signUpButton = document.getElementById("signUpButton");
+const loginButton = document.getElementById("loginButton");
+const submitLoginButton = document.getElementById("submitLoginButton");
+const userStatus = document.getElementById("userStatus");
 
 // Import Firebase modules
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -42,33 +50,31 @@ function login(email, password) {
         });
 }
 
-function logout() {
+// Logout functionality
+logoutButton.addEventListener("click", () => {
     signOut(auth)
         .then(() => {
             console.log("User logged out.");
         })
-        .catch(error => {
+        .catch((error) => {
             console.error("Error during logout:", error.message);
         });
-}
-
-// Monitor User State
-onAuthStateChanged(auth, user => {
-    if (user) {
-        console.log("User is logged in:", user.email);
-    } else {
-        console.log("No user is logged in.");
-    }
 });
 
-//Login Window
-const loginModal = document.getElementById("loginModal");
-const signUpModal = document.getElementById("signUpModal");
-const closeLoginModal = document.getElementById("closeLoginModal");
-const closeSignUpModal = document.getElementById("closeSignUpModal");
-const signUpButton = document.getElementById("signUpButton");
-const loginButton = document.getElementById("loginButton");
-const submitLoginButton = document.getElementById("submitLoginButton");
+// Monitor User State
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is logged in
+        userStatus.textContent = user.email;
+        loginButton.style.display = "none";
+        logoutButton.style.display = "block";
+    } else {
+        // User is not logged in
+        userStatus.textContent = "Not Logged In";
+        loginButton.style.display = "block";
+        logoutButton.style.display = "none";
+    }
+});
 
 // Open modal
 function openLoginModal() {
