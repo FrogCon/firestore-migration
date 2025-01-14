@@ -134,25 +134,35 @@ loginButton.addEventListener("click", () => {
 // Close modal
 closeLoginModal.addEventListener("click", () => {
     loginModal.style.display = "none";
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
 });
 
 // Open and close the sign-up modal
 signUpButton.addEventListener("click", () => {
     loginModal.style.display = "none"; // Close login modal
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
     signUpModal.style.display = "block"; // Open sign-up modal
 });
 
 closeSignUpModal.addEventListener("click", () => {
     signUpModal.style.display = "none";
+    document.getElementById("signUpEmail").value = "";
+    document.getElementById("signUpPassword").value = "";
 });
 
 // Close modals if clicking outside them
 window.addEventListener("click", (event) => {
     if (event.target === loginModal) {
         loginModal.style.display = "none";
+        document.getElementById("loginEmail").value = "";
+        document.getElementById("loginPassword").value = "";
     }
     if (event.target === signUpModal) {
         signUpModal.style.display = "none";
+        document.getElementById("signUpEmail").value = "";
+        document.getElementById("signUpPassword").value = "";
     }
 });
 
@@ -163,6 +173,10 @@ submitLoginButton.addEventListener("click", () => {
 
     // Call the existing login function
     login(email, password);
+
+    // Clear the input fields after submission
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
 });
 
 // Handle sign-up
@@ -173,10 +187,15 @@ submitSignUpButton.addEventListener("click", () => {
 
     if (password !== confirmPassword) {
         alert("Passwords do not match!");
+        document.getElementById("signUpPassword").value = "";
         return;
     }
 
     signUp(email, password);
+
+    // Clear the input fields after submission
+    document.getElementById("signUpEmail").value = "";
+    document.getElementById("signUpPassword").value = "";
 });
 
 // Define Library functions
