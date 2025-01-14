@@ -92,6 +92,35 @@ function getUserActions() {
         });
 }
 
+// Define the openTab function
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+
+    // Hide all tab content
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Remove the "active" class from all buttons
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the selected tab and set the clicked button as active
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+// Attach event listeners to the buttons
+document.getElementById("homeTab").addEventListener("click", (event) => openTab(event, "Home"));
+document.getElementById("gamesTab").addEventListener("click", (event) => openTab(event, "Games"));
+document.getElementById("modifyGamesTab").addEventListener("click", (event) => openTab(event, "ModifyGames"));
+
+// Automatically open the default tab on page load
+document.getElementById("homeTab").click();
+
 function getCollection() {
     var username = document.getElementById('bggUsername').value;
     var libraryDropdown = document.getElementById('libraryDropdown');
