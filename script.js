@@ -171,6 +171,16 @@ submitSignUpButton.addEventListener("click", () => {
 });
 
 // Define Library functions
+function isLoggedIn() {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You must be logged in to access this feature.");
+        loginModal.style.display = "block";
+        return false;
+    }
+    return true;
+}
+
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
 
@@ -216,6 +226,8 @@ document.getElementById("searchLibraryButton").addEventListener("click", () => s
 document.getElementById("homeTab").click();
 
 function getCollection() {
+    if (!isLoggedIn()) return;
+    
     var username = document.getElementById('bggUsername').value;
     var libraryDropdown = document.getElementById('libraryDropdown');
     var selectedLibrary = libraryDropdown.value;
@@ -363,6 +375,8 @@ function fetchGameDetails(gameId) {
 }
 
 function searchGames(button) {
+    if (!isLoggedIn()) return;
+    
     var libraryDropdown = document.getElementById('libraryDropdown');
     var selectedLibrary = libraryDropdown.value;
 
@@ -596,6 +610,8 @@ function hideCurrentActiveOverlays() {
 }
 
 function searchLibrary(button) {
+    if (!isLoggedIn()) return;
+
     var libraryDropdown = document.getElementById('libraryDropdown');
     var selectedLibrary = libraryDropdown.value;
 
@@ -662,6 +678,8 @@ function toggleOwnerGames(ownerDiv) {
 }
 
 function createClickHandler(name, objectId, thumbnailImg, status, resultDiv) {
+    if (!isLoggedIn()) return;
+    
     return function() {
         var extractedData = [{ name, objectId: Number(objectId), thumbnail: thumbnailImg.src, status }];
         
@@ -683,6 +701,8 @@ function createClickHandler(name, objectId, thumbnailImg, status, resultDiv) {
 }
 
 function createRemoveClickHandler(game, resultDiv) {
+    if (!isLoggedIn()) return;
+    
     return function() {
         removeFromGoogleSheet(game.objectId);
 
@@ -698,6 +718,8 @@ function createRemoveClickHandler(game, resultDiv) {
 }
 
 function createGameClickHandler(game, resultDiv) {
+    if (!isLoggedIn()) return;
+    
     return function() {
         if (game.animating) return; // Prevent handling clicks if animation is ongoing
 
@@ -814,6 +836,8 @@ function handleLibraryChange() {
     document.getElementById('libraryResults').innerHTML = '';
 
     if (selectedValue === 'newLibrary') {
+        if (!isLoggedIn()) return;
+        
         var newLibraryName = prompt("Please enter a name for the new library:");
         if (newLibraryName) {
             // Add the new library to the dropdown
