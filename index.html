@@ -215,7 +215,7 @@
         <div id="ModifyGames" class="tabcontent">           
             <div class="container">
                 <h1>Choose A Library</h1>
-                <select id="libraryDropdown" onchange="handleLibraryChange()">
+                <select id="libraryDropdown">
                     <option value="" disabled selected>Choose A Library</option>
                     <option value="newLibrary">New Library</option>
                 </select>
@@ -225,20 +225,20 @@
 
                 <h1>Import BGG Collection</h1>
                 <input type="text" id="bggUsername" placeholder="Enter BGG Username">
-                <button class="button" onclick="getCollection()">Get Collection</button>
+                <button id="getCollectionButton" class="button">Get Collection</button>
                 <div id="statusMessage"></div>
 
                 <hr class="rounded">
 
                 <h1>Add Individual Games</h1>
                 <input type="text" id="bggSearchQuery" placeholder="Search For A Game">
-                <button class="button" onclick="searchGames(this)">Search</button>
+                <button id="searchGamesButton" class="button">Search</button>
                 <div id="searchResults"></div>
 
                 <hr class="rounded">
 
                 <h1>Remove Individual Games</h1>
-                <button class="button" onclick="searchLibrary(this)">Display Library</button>
+                <button id="searchLibraryButton" class="button">Display Library</button>
                 <div id="libraryResults"></div>
             </div>
         </div>
