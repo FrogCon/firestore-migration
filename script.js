@@ -92,6 +92,28 @@ function getUserActions() {
         });
 }
 
+//Login Window
+// Open and close the login modal
+const loginModal = document.getElementById("loginModal");
+const closeLoginModal = document.getElementById("closeLoginModal");
+
+// Open modal
+function openLoginModal() {
+    loginModal.style.display = "block";
+}
+
+// Close modal
+closeLoginModal.addEventListener("click", () => {
+    loginModal.style.display = "none";
+});
+
+// Close modal if clicking outside the modal
+window.addEventListener("click", (event) => {
+    if (event.target === loginModal) {
+        loginModal.style.display = "none";
+    }
+});
+
 // Define Library functions
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
