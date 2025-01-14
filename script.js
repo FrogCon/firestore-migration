@@ -5,15 +5,92 @@ var currentActiveOverlays = {
     addActionOverlay: null
 };
 
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-};
+// Import Firebase modules
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+// Get references to Firebase services
+const auth = getAuth(); // Uses the app initialized in index.html
+const db = getFirestore(); // Uses the same app
+
+// Authentication Functions
+function signUp(email, password) {
+    createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+            console.log("User signed up:", userCredential.user);
+        })
+        .catch(error => {
+            console.error("Error during signup:", error.message);
+        });
+}
+
+function login(email, password) {
+    signInWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+            console.log("User logged in:", userCredential.user);
+        })
+        .catch(error => {
+            console.error("Error during login:", error.message);
+        });
+}
+
+function logout() {
+    signOut(auth)
+        .then(() => {
+            console.log("User logged out.");
+        })
+        .catch(error => {
+            console.error("Error during logout:", error.message);
+        });
+}
+
+// Monitor User State
+onAuthStateChanged(auth, user => {
+    if (user) {
+        console.log("User is logged in:", user.email);
+    } else {
+        console.log("No user is logged in.");
+    }
+});
+
+// Firestore Functions
+function saveAction(action) {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You must be logged in to perform this action.");
+        return;
+    }
+
+    const userDoc = doc(db, "actions", user.uid);
+    setDoc(userDoc, { actions: action }, { merge: true })
+        .then(() => {
+            console.log("Action saved successfully.");
+        })
+        .catch(error => {
+            console.error("Error saving action:", error.message);
+        });
+}
+
+function getUserActions() {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You must be logged in to view your actions.");
+        return;
+    }
+
+    const userDoc = doc(db, "actions", user.uid);
+    getDoc(userDoc)
+        .then(docSnap => {
+            if (docSnap.exists()) {
+                console.log("User actions:", docSnap.data());
+            } else {
+                console.log("No actions found for this user.");
+            }
+        })
+        .catch(error => {
+            console.error("Error retrieving actions:", error.message);
+        });
+}
 
 function getCollection() {
     var username = document.getElementById('bggUsername').value;
