@@ -6,10 +6,12 @@ var currentActiveOverlays = {
 };
 
 async function initializeAuth() {
+    console.log("Checking if createAuth0Client is defined...");
     if (typeof createAuth0Client === "undefined") {
         console.error("Auth0 SDK script not loaded.");
         return; // Stop further execution
     }
+    console.log("createAuth0Client is defined, proceeding...");
 
     try {
         const auth0 = await createAuth0Client({
@@ -17,7 +19,6 @@ async function initializeAuth() {
             clientId: 'r3Dn3ZU5toVljUYGKU6qr9Fydk8z1K1H',
             cacheLocation: 'localstorage', // Persist login even after a page refresh
         });
-
         console.log("Auth0 initialized successfully.");
 
         // Handle login callback
@@ -58,7 +59,7 @@ async function initializeAuth() {
 
 // Call the initializeAuth function
 initializeAuth().then(() => {
-    console.log('Auth0 initialized successfully.');
+    console.log('This is not important...');
 });
 
 //End of Auth0 Scripts
