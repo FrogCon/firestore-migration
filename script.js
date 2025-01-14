@@ -50,14 +50,15 @@ function login(email, password) {
         });
 }
 
-// Logout functionality
 logoutButton.addEventListener("click", () => {
     signOut(auth)
         .then(() => {
             console.log("User logged out.");
+            alert("Logout successful!");
         })
         .catch((error) => {
             console.error("Error during logout:", error.message);
+            alert("Logout failed, try again...");
         });
 });
 
@@ -117,6 +118,7 @@ closeSignUpModal.addEventListener("click", () => {
     signUpModal.style.display = "none";
     document.getElementById("signUpEmail").value = "";
     document.getElementById("signUpPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
 });
 
 // Close modals if clicking outside them
@@ -130,6 +132,7 @@ window.addEventListener("click", (event) => {
         signUpModal.style.display = "none";
         document.getElementById("signUpEmail").value = "";
         document.getElementById("signUpPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
     }
 });
 
@@ -155,6 +158,7 @@ submitSignUpButton.addEventListener("click", () => {
     if (password !== confirmPassword) {
         alert("Passwords do not match!");
         document.getElementById("signUpPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
         return;
     }
 
@@ -163,6 +167,7 @@ submitSignUpButton.addEventListener("click", () => {
     // Clear the input fields after submission
     document.getElementById("signUpEmail").value = "";
     document.getElementById("signUpPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
 });
 
 // Define Library functions
