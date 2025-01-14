@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Frog Con Games 3</title>
+        <title>Frog Con Games</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
             body {
@@ -12,23 +12,6 @@
                 flex-direction: column;
                 align-items: center;
                 text-align: center;
-            }
-
-            #loginForm {
-                display: none;
-                margin-top: 50px;
-            }
-
-            #loginForm input, #loginForm button {
-                width: 75%;
-                padding: 10px;
-                margin: 10px 0;
-                font-size: 16px;
-            }
-
-            #mainContent {
-                display: none;
-                margin-top: 20px;
             }
 
             #libraryDropdown {
@@ -206,71 +189,61 @@
         </style>
     </head>
     <body>
-        <div id="loginForm">
-            <h2>Login</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button onclick="handleLogin()">Login</button>
-            <p id="loginError" style="color: red;"></p>
+        <div id="loadingOverlay" style="display: none; position: fixed; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 2; cursor: pointer;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; color: white;">
+                Loading...
+            </div>
+        </div>     
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
+            <button class="tablinks" onclick="openTab(event, 'Games')">Games</button>
+            <button class="tablinks" onclick="openTab(event, 'ModifyGames')">Modify Games</button>
+        </div>
+    
+        <div id="Home" class="tabcontent">
+            <h1>Welcome to Frog Con 2025</h1>
+            <p>Dates: Feb. 27th - Mar. 2nd</p>
+            <p>Check-in: 4PM</p>
+            <p>Check-out: 11AM</p>
+            <p>Address: 3705 Rouse Rd. Orlando, FL</p>
+        </div>
+    
+        <div id="Games" class="tabcontent">
+            <h1>Make Your Selections</h1>
+        </div>
+    
+        <div id="ModifyGames" class="tabcontent">           
+            <div class="container">
+                <h1>Choose A Library</h1>
+                <select id="libraryDropdown" onchange="handleLibraryChange()">
+                    <option value="" disabled selected>Choose A Library</option>
+                    <option value="newLibrary">New Library</option>
+                </select>
+                <br></br>
+
+                <hr class="rounded">
+
+                <h1>Import BGG Collection</h1>
+                <input type="text" id="bggUsername" placeholder="Enter BGG Username">
+                <button class="button" onclick="getCollection()">Get Collection</button>
+                <div id="statusMessage"></div>
+
+                <hr class="rounded">
+
+                <h1>Add Individual Games</h1>
+                <input type="text" id="bggSearchQuery" placeholder="Search For A Game">
+                <button class="button" onclick="searchGames(this)">Search</button>
+                <div id="searchResults"></div>
+
+                <hr class="rounded">
+
+                <h1>Remove Individual Games</h1>
+                <button class="button" onclick="searchLibrary(this)">Display Library</button>
+                <div id="libraryResults"></div>
+            </div>
         </div>
 
-        <div id="mainContent">
-            <div id="loadingOverlay" style="display: none; position: fixed; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 2; cursor: pointer;">
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; color: white;">
-                    Loading...
-                </div>
-            </div>     
-            <div class="tab">
-                <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
-                <button class="tablinks" onclick="openTab(event, 'Games')">Games</button>
-                <button class="tablinks" onclick="openTab(event, 'ModifyGames')">Modify Games</button>
-            </div>
-        
-            <div id="Home" class="tabcontent">
-                <h1>Welcome to Frog Con 2025</h1>
-                <p>Dates: Feb. 27th - Mar. 2nd</p>
-                <p>Check-in: 4PM</p>
-                <p>Check-out: 11AM</p>
-                <p>Address: 3705 Rouse Rd. Orlando, FL</p>
-            </div>
-        
-            <div id="Games" class="tabcontent">
-                <h1>Make Your Selections</h1>
-            </div>
-        
-            <div id="ModifyGames" class="tabcontent">           
-                <div class="container">
-                    <h1>Choose A Library</h1>
-                    <select id="libraryDropdown" onchange="handleLibraryChange()">
-                        <option value="" disabled selected>Choose A Library</option>
-                        <option value="newLibrary">New Library</option>
-                    </select>
-                    <br></br>
-    
-                    <hr class="rounded">
-    
-                    <h1>Import BGG Collection</h1>
-                    <input type="text" id="bggUsername" placeholder="Enter BGG Username">
-                    <button class="button" onclick="getCollection()">Get Collection</button>
-                    <div id="statusMessage"></div>
-    
-                    <hr class="rounded">
-    
-                    <h1>Add Individual Games</h1>
-                    <input type="text" id="bggSearchQuery" placeholder="Search For A Game">
-                    <button class="button" onclick="searchGames(this)">Search</button>
-                    <div id="searchResults"></div>
-    
-                    <hr class="rounded">
-    
-                    <h1>Remove Individual Games</h1>
-                    <button class="button" onclick="searchLibrary(this)">Display Library</button>
-                    <div id="libraryResults"></div>
-                </div>
-            </div>
-        </div>
-    
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
     <script>
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
