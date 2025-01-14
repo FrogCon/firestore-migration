@@ -5,6 +5,16 @@ var currentActiveOverlays = {
     addActionOverlay: null
 };
 
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 function getCollection() {
     var username = document.getElementById('bggUsername').value;
     var libraryDropdown = document.getElementById('libraryDropdown');
