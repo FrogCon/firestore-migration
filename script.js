@@ -28,9 +28,14 @@ function login(email, password) {
     signInWithEmailAndPassword(auth, email, password)
         .then(userCredential => {
             console.log("User logged in:", userCredential.user);
+            alert("Login successful!");
+            // Close the login modal
+            const loginModal = document.getElementById("loginModal");
+            loginModal.style.display = "none";
         })
         .catch(error => {
             console.error("Error during login:", error.message);
+            alert("Login failed: " + error.message);
         });
 }
 
