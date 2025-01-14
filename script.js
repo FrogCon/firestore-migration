@@ -18,9 +18,11 @@ function signUp(email, password) {
     createUserWithEmailAndPassword(auth, email, password)
         .then(userCredential => {
             console.log("User signed up:", userCredential.user);
+            login(email, password);
         })
         .catch(error => {
             console.error("Error during signup:", error.message);
+            alert("Sign-up failed, try again...");
         });
 }
 
@@ -98,9 +100,13 @@ function getUserActions() {
 }
 
 //Login Window
-// Open and close the login modal
 const loginModal = document.getElementById("loginModal");
+const signUpModal = document.getElementById("signUpModal");
 const closeLoginModal = document.getElementById("closeLoginModal");
+const closeSignUpModal = document.getElementById("closeSignUpModal");
+const signUpButton = document.getElementById("signUpButton");
+const loginButton = document.getElementById("loginButton");
+const submitLoginButton = document.getElementById("submitLoginButton");
 
 // Open modal
 function openLoginModal() {
@@ -119,10 +125,6 @@ window.addEventListener("click", (event) => {
     }
 });
 
-// Get references to modal elements
-const loginButton = document.getElementById("loginButton");
-const submitLoginButton = document.getElementById("submitLoginButton");
-
 // Open modal
 loginButton.addEventListener("click", () => {
     loginModal.style.display = "block";
@@ -133,10 +135,23 @@ closeLoginModal.addEventListener("click", () => {
     loginModal.style.display = "none";
 });
 
-// Close modal if clicking outside of it
+// Open and close the sign-up modal
+signUpButton.addEventListener("click", () => {
+    loginModal.style.display = "none"; // Close login modal
+    signUpModal.style.display = "block"; // Open sign-up modal
+});
+
+closeSignUpModal.addEventListener("click", () => {
+    signUpModal.style.display = "none";
+});
+
+// Close modals if clicking outside them
 window.addEventListener("click", (event) => {
     if (event.target === loginModal) {
         loginModal.style.display = "none";
+    }
+    if (event.target === signUpModal) {
+        signUpModal.style.display = "none";
     }
 });
 
@@ -147,9 +162,20 @@ submitLoginButton.addEventListener("click", () => {
 
     // Call the existing login function
     login(email, password);
+});
 
-    // Close the modal after a successful login (you can move this into the `.then` of your login function)
-    loginModal.style.display = "none";
+// Handle sign-up
+submitSignUpButton.addEventListener("click", () => {
+    const email = document.getElementById("signUpEmail").value;
+    const password = document.getElementById("signUpPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+    }
+
+    signUp(email, password);
 });
 
 // Define Library functions
@@ -193,6 +219,10 @@ document.getElementById("libraryDropdown").addEventListener("change", handleLibr
 document.getElementById("getCollectionButton").addEventListener("click", getCollection);
 document.getElementById("searchGamesButton").addEventListener("click", () => searchGames(document.getElementById("searchGamesButton")));
 document.getElementById("searchLibraryButton").addEventListener("click", () => searchLibrary(document.getElementById("searchLibraryButton")));
+document.getElementById("signUpButton").addEventListener("click", () => {
+    alert("Sign-Up button clicked!"); // Replace with actual sign-up logic
+});
+
 
 
 // Automatically open the default tab on page load
