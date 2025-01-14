@@ -52,20 +52,20 @@
             }
             
             /* Form styles */
-            #loginForm {
+            form {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
             }
             
-            #loginForm label {
+            form label {
                 font-weight: bold;
                 margin-bottom: 5px;
                 align-self: flex-start;
             }
             
-            #loginForm input {
-                width: 100%;
+            form input {
+                width: 100%; /* Stretch inputs to fill the form width */
                 padding: 10px;
                 margin-bottom: 15px;
                 font-size: 14px;
@@ -73,30 +73,33 @@
                 border-radius: 5px;
                 box-sizing: border-box;
             }
-            
-            #submitLoginButton {
-                background-color: #4CAF50;
-                color: white;
-                border: none;
+
+            form button {
+                width: 100%;
                 padding: 10px;
                 font-size: 16px;
                 border-radius: 5px;
                 cursor: pointer;
+                border: none;
+                margin-bottom: 10px;
             }
             
-            #submitLoginButton:hover {
+            /* Submit button */
+            #submitLoginButton,
+            #submitSignUpButton {
+                background-color: #4CAF50;
+                color: white;
+            }
+            
+            #submitLoginButton:hover,
+            #submitSignUpButton:hover {
                 background-color: #45a049;
             }
-
+            
+            /* Sign-Up button in the login modal */
             #signUpButton {
                 background-color: #007BFF; /* Blue color */
                 color: white;
-                border: none;
-                padding: 10px 20px;
-                font-size: 16px;
-                border-radius: 5px;
-                cursor: pointer;
-                margin-bottom: 10px;
             }
             
             #signUpButton:hover {
