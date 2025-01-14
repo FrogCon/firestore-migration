@@ -117,6 +117,11 @@ function openTab(evt, tabName) {
 document.getElementById("homeTab").addEventListener("click", (event) => openTab(event, "Home"));
 document.getElementById("gamesTab").addEventListener("click", (event) => openTab(event, "Games"));
 document.getElementById("modifyGamesTab").addEventListener("click", (event) => openTab(event, "ModifyGames"));
+document.getElementById("libraryDropdown").addEventListener("change", handleLibraryChange);
+document.getElementById("getCollectionButton").addEventListener("click", getCollection);
+document.getElementById("searchGamesButton").addEventListener("click", () => searchGames(document.getElementById("searchGamesButton")));
+document.getElementById("searchLibraryButton").addEventListener("click", () => searchLibrary(document.getElementById("searchLibraryButton")));
+
 
 // Automatically open the default tab on page load
 document.getElementById("homeTab").click();
