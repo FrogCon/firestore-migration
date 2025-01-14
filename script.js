@@ -114,6 +114,29 @@ window.addEventListener("click", (event) => {
     }
 });
 
+// Get references to modal elements
+const loginModal = document.getElementById("loginModal");
+const closeLoginModal = document.getElementById("closeLoginModal");
+const loginButton = document.getElementById("loginButton");
+const submitLoginButton = document.getElementById("submitLoginButton");
+
+// Open modal
+loginButton.addEventListener("click", () => {
+    loginModal.style.display = "block";
+});
+
+// Close modal
+closeLoginModal.addEventListener("click", () => {
+    loginModal.style.display = "none";
+});
+
+// Close modal if clicking outside of it
+window.addEventListener("click", (event) => {
+    if (event.target === loginModal) {
+        loginModal.style.display = "none";
+    }
+});
+
 // Define Library functions
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
