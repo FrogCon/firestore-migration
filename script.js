@@ -541,18 +541,47 @@ function displayGamesTab() {
             };
 
             var addActionOverlay = document.createElement('div');
-            addActionOverlay.style = 'position: absolute; bottom: 0; right: 0; width: 100%; height: 50%; background-color: rgba(0, 255, 0, 0.5); color: white; display: flex; justify-content: center; align-items: center; display: none;border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; text-shadow: 2px 2px 4px #000000;';
-            var addActionText = document.createElement('span');
-            addActionText.textContent = 'Add / Remove';
-            addActionText.style = `background-color: rgba(0, 0, 0, 0.5); padding: 0.5rem 1rem; border-radius: 0.5rem;`;
-            addActionOverlay.appendChild(addActionText);
-            addActionOverlay.onclick = function(event) {
-                createGameClickHandler(game, resultDiv)();
-                hideOverlays(websiteOverlay, addActionOverlay);
-                // Re-enable showing overlays on click
-                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
-                event.stopPropagation(); // Prevent triggering clicks on underlying elements
-            };
+		addActionOverlay.style = `
+		    position: absolute; 
+		    bottom: 0; 
+		    right: 0; 
+		    width: 100%; 
+		    height: 50%; 
+		    background-color: rgba(0, 255, 0, 0.5); 
+		    color: white; 
+		    display: flex; 
+		    justify-content: center; 
+		    align-items: center; 
+		    display: none;
+		    border-bottom-left-radius: 1rem; 
+		    border-bottom-right-radius: 1rem; 
+		    text-shadow: 2px 2px 4px #000000;
+		`;
+		
+		// Create an image element for the "Add/Remove" icon
+		var addActionImage = document.createElement('img');
+		addActionImage.src = './thumbUp.png'; // Path to the image
+		addActionImage.alt = 'Add/Remove';
+		addActionImage.style = `
+		    width: 24px; 
+		    height: 24px; 
+		    background-color: rgba(0, 0, 0, 0.5); 
+		    padding: 0.5rem; 
+		    border-radius: 50%;
+		`;
+		
+		// Append the image to the overlay
+		addActionOverlay.appendChild(addActionImage);
+		
+		// Click handler for the overlay
+		addActionOverlay.onclick = function(event) {
+		    createGameClickHandler(game, resultDiv)();
+		    hideOverlays(websiteOverlay, addActionOverlay);
+		    // Re-enable showing overlays on click
+		    resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+		    event.stopPropagation(); // Prevent triggering clicks on underlying elements
+		};
+
 
             resultDiv.style.position = 'relative';
             resultDiv.appendChild(websiteOverlay);
