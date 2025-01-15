@@ -789,7 +789,7 @@ function updateGameInSheet(game) {
 
     fetch(url, {
         method: "POST",
-        //mode: 'no-cors',
+        mode: 'no-cors',
         headers: {
             "Content-Type": "application/json",
         },
