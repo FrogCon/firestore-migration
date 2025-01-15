@@ -757,7 +757,7 @@ function createGameClickHandler(game, resultDiv) {
 	        try {
 	            	statusArray = JSON.parse(game.status || "[]");
 			console.log("Game Status is: ", game.status);
-			console.log("Status Array is: ", statusArray;
+			console.log("Status Array is: ", statusArray);
 	        } catch (error) {
 	            	console.error("Error parsing game status:", error);
 	        }
