@@ -583,17 +583,16 @@ function displayGamesTab() {
 		var userCountIndicator = document.createElement('div');
 		userCountIndicator.style = `
 		    position: absolute; 
-		    top: 5px; 
-		    right: 5px; 
-		    width: 24px; 
-		    height: 24px; 
-		    border-radius: 50%; 
-		    background-color: rgba(0, 0, 0, 0.8); 
+		    top: 0px; 
+		    right: 0px; 
+		    width: 32px; 
+		    height: 32px; 
+		    border-radius: 16px; 
+		    background-color: rgba(0, 0, 0, 0.5); 
 		    color: white; 
 		    display: flex; 
 		    justify-content: center; 
 		    align-items: center; 
-		    font-size: 12px; 
 		    font-weight: bold;
 		    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
 		`;
