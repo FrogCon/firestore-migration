@@ -241,15 +241,14 @@ function getCollection() {
 
     // Verify that the current user owns the selected library
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}&email=${user.email}`;
-    console.log(url);
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
             if (!data.isOwner) {
-                alert("You do not have permission to access this library.");
-                return;
-            }
+		    alert(data.error || "You do not have permission to access this library.");
+		    return;
+		}
 
             // Proceed to fetch the collection
             statusDiv.innerHTML = "Fetching Collection...";
