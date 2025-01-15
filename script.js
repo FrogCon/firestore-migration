@@ -780,7 +780,7 @@ function createGameClickHandler(game, resultDiv) {
 	        game.status = JSON.stringify(statusArray);
 		resultDiv.dataset.status = statusArray;
 		console.log("Game Status is: ", game.status);
-		console.log("Status Array is: ", statusArray;
+		console.log("Status Array is: ", statusArray);
 	
 		// Send the updated status to Google Sheets
 	        updateGameInSheet(game, action);
