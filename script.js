@@ -224,55 +224,61 @@ document.getElementById("searchLibraryButton").addEventListener("click", () => s
 
 // Automatically open the default tab on page load
 document.getElementById("homeTab").click();
-
+    
 function getCollection() {
     if (!isLoggedIn()) return;
-    
-    var username = document.getElementById('bggUsername').value;
-    var libraryDropdown = document.getElementById('libraryDropdown');
-    var selectedLibrary = libraryDropdown.value;
-    var statusDiv = document.getElementById('statusMessage');
-    
-    if (username && selectedLibrary && selectedLibrary !== 'newLibrary') {
-        statusDiv.innerHTML = 'Fetching Collection...';
-        fetch(`https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&own=1&version=1`)
-            .then(response => {
-                if (response.status === 202) {
-                    // Request is queued, show retry message and retry after some delay
-                    statusDiv.innerHTML = 'Shelving Games. Please Wait...';
-                    setTimeout(() => getCollection(), 10000); // Retry after 10 seconds
-                } else if (response.ok) {
-                    return response.text();
-                } else {
-                    statusDiv.innerHTML = '';
-                    throw new Error('Network response was not ok.');
-                }
-            })
-            .then(str => {
-                if (str) {
-                    return (new window.DOMParser()).parseFromString(str, "text/xml");
-                }
-            })
-            .then(data => {
-                if (data) {
-                    globalXmlData = data;
-                    prepareData(data);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert ('An error occurred. Please try again.');
-                statusDiv.innerHTML = '';
-            });
-    } else {
-        if (!username) {
-            alert ('Please Enter A Username.');
-            statusDiv.innerHTML = '';
-        } else {
-            alert ('Please Choose A Library First.');
-            statusDiv.innerHTML = '';
-        }
+
+    const user = auth.currentUser;
+    const username = document.getElementById('bggUsername').value;
+    const libraryDropdown = document.getElementById('libraryDropdown');
+    const selectedLibrary = libraryDropdown.value;
+    const statusDiv = document.getElementById('statusMessage');
+
+    if (!username || !selectedLibrary || selectedLibrary === 'newLibrary') {
+        alert("Please enter a username and choose a valid library.");
+        return;
     }
+
+    // Verify that the current user owns the selected library
+    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}&email=${user.email}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.isOwner) {
+                alert("You do not have permission to access this library.");
+                return;
+            }
+
+            // Proceed to fetch the collection
+            statusDiv.innerHTML = "Fetching Collection...";
+            fetch(`https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&own=1&version=1`)
+                .then(response => {
+                    if (response.status === 202) {
+                        statusDiv.innerHTML = "Shelving Games. Please Wait...";
+                        setTimeout(() => getCollection(), 10000); // Retry after 10 seconds
+                    } else if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error("Network response was not ok.");
+                    }
+                })
+                .then(str => {
+                    if (str) {
+                        const data = (new window.DOMParser()).parseFromString(str, "text/xml");
+                        prepareData(data);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred. Please try again.");
+                    statusDiv.innerHTML = "";
+                });
+        })
+        .catch(error => {
+            console.error("Error verifying library ownership:", error);
+            alert("Failed to verify library ownership.");
+        });
 }
 
 function prepareData(data) {
