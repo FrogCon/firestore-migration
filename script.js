@@ -579,12 +579,45 @@ function displayGamesTab() {
 		
 		// Call updateThumbColor initially and on data-status changes
 		updateThumbColor();
+
+		var userCountIndicator = document.createElement('div');
+		userCountIndicator.style = `
+		    position: absolute; 
+		    top: 5px; 
+		    right: 5px; 
+		    width: 24px; 
+		    height: 24px; 
+		    border-radius: 50%; 
+		    background-color: rgba(0, 0, 0, 0.8); 
+		    color: white; 
+		    display: flex; 
+		    justify-content: center; 
+		    align-items: center; 
+		    font-size: 12px; 
+		    font-weight: bold;
+		    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+		`;
+		
+		// Append the indicator to the resultDiv
+		resultDiv.appendChild(userCountIndicator);
+
+		// Function to update the user count and the indicator's visibility
+		function updateUserCount() {
+		    const status = resultDiv.dataset.status || "";
+		    const statusArray = status ? status.split(",") : []; // Split users by commas
+		    userCountIndicator.textContent = statusArray.length; // Update the count
+		    userCountIndicator.style.display = statusArray.length > 0 ? "flex" : "none"; // Hide if no users
+		}
+		
+		// Initial update of the user count
+		updateUserCount();
 		
 		// Click handler for the overlay
 		addActionOverlay.onclick = function(event) {
 		    createGameClickHandler(game, resultDiv)();
 		    hideOverlays(websiteOverlay, addActionOverlay);
 		    updateThumbColor();
+		    updateUserCount();
 		    // Re-enable showing overlays on click
 		    resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
 		    event.stopPropagation(); // Prevent triggering clicks on underlying elements
