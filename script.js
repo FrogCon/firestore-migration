@@ -650,24 +650,7 @@ function searchLibrary(button) {
                 sortedGames.forEach((game) => {
                     var resultDiv = document.createElement('div');
                     resultDiv.className = 'result-item';
-
-                    // Parse the "Status" column (assumes it's a JSON array)
-                    let statusArray = [];
-                    try {
-                        statusArray = JSON.parse(game.status || "[]");
-                    } catch (error) {
-                        console.error("Error parsing status for game:", game.name, error);
-                    }
         
-                    // Set background color based on the parsed status
-                    if (statusArray.includes(user.email)) {
-                        resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
-                    } else if (statusArray.length > 0) {
-                        resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
-                    } else {
-                        resultDiv.style.backgroundColor = ""; // Default background
-                    }
-
                     var thumbnailImg = document.createElement('img');
                     thumbnailImg.src = game.thumbnail; // Assuming thumbnail URL is available
                     thumbnailImg.alt = game.name;
