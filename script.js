@@ -762,7 +762,7 @@ function createGameClickHandler(game, resultDiv) {
 	            	console.error("Error parsing game status:", error);
 	        }
 
-		const action = "remove";
+		var action = "remove";
 	        // Toggle the current user's email in the array
 	        if (statusArray.includes(user.email)) {
 	            	// Remove the user if already in the array
