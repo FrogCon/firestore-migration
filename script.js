@@ -497,8 +497,7 @@ function displayGamesTab() {
 
             var resultDiv = document.createElement('div');
             resultDiv.className = 'result-item';
-            resultDiv.dataset.status = game.status;
-
+            
             let statusArray = [];
             try {
                 statusArray = JSON.parse(game.status || "[]");
@@ -514,6 +513,8 @@ function displayGamesTab() {
             } else {
                 resultDiv.style.backgroundColor = ""; // Default background
             }
+
+            resultDiv.dataset.status = statusArray;
 
             var thumbnailImg = document.createElement('img');
             thumbnailImg.src = game.thumbnail; // Assuming thumbnail URL is available
@@ -743,25 +744,57 @@ function createRemoveClickHandler(game, resultDiv) {
 
 function createGameClickHandler(game, resultDiv) {
     if (!isLoggedIn()) return;
-    
-    return function() {
+
+    return function () {
         if (game.animating) return; // Prevent handling clicks if animation is ongoing
+
+        const user = auth.currentUser;
 
         game.animating = true; // Set the animating flag
 
-        // Toggle the fourth column value
-        game.status = (game.status === 'Y' ? 'N' : 'Y');
-        resultDiv.dataset.status = game.status;
+        // Parse the status array from the game's status field
+        let statusArray = [];
+        try {
+            statusArray = JSON.parse(game.status || "[]");
+        } catch (error) {
+            console.error("Error parsing game status:", error);
+        }
+
+        // Toggle the current user's email in the array
+        if (statusArray.includes(user.email)) {
+            // Remove the user if already in the array
+            statusArray = statusArray.filter(email => email !== user.email);
+        } else {
+            // Add the user if not already in the array
+            statusArray.push(user.email);
+        }
+
+        // Update the game.status to the updated array as a JSON string
+        game.status = JSON.stringify(statusArray);
+	    resultDiv.dataset.status = statusArray;
+
+	    // Send the updated status to Google Sheets
         updateGameInSheet(game);
 
-        // Update the background color
-        resultDiv.style.backgroundColor = game.status === 'Y' ? 'green' : '#f0f0f0';
-        resultDiv.style.animation = 'spin-grow 1s linear forwards';
+        // Update the background color based on the status
+        if (statusArray.includes(user.email)) {
+            resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
+        } else if (statusArray.length > 0) {
+            resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
+        } else {
+            resultDiv.style.backgroundColor = ""; // Default background
+        }
 
-        resultDiv.addEventListener('animationend', function() {
-            resultDiv.style.animation ='';
-            game.animating = false;
-        }, {once:true});
+        // Reset animation flag after animation completes
+        resultDiv.style.animation = "spin-grow 1s linear forwards";
+        resultDiv.addEventListener(
+            "animationend",
+            function () {
+                resultDiv.style.animation = "";
+                game.animating = false;
+            },
+            { once: true }
+        );
     };
 }
 
