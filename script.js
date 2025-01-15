@@ -726,12 +726,9 @@ function createRemoveClickHandler(game, resultDiv) {
 }
 
 function createGameClickHandler(game, resultDiv) {
-	if (!isLoggedIn()) return;
-
 	return function () {
-		console.log("Click registered");
-		if (game.animating) return; // Prevent handling clicks if animation is ongoing
-		console.log("Proceeding");
+		if (!isLoggedIn() || game.animating) return; // Prevent handling clicks if animation is ongoing
+
 	        const user = auth.currentUser;
 	
 	        game.animating = true; // Set the animating flag
