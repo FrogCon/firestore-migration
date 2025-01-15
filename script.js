@@ -439,6 +439,7 @@ function displaySearchResults(data, button) {
 function displayGamesTab() {
     showLoadingOverlay();
     fetchAllGames().then(gamesData => {
+        const user = auth.currentUser;
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
 
@@ -498,9 +499,20 @@ function displayGamesTab() {
             resultDiv.className = 'result-item';
             resultDiv.dataset.status = game.status;
 
-            // Check the fourth column data and change background color if it's 'Y'
-            if (game.status === 'Y') {
-                resultDiv.style.backgroundColor = 'green';
+            let statusArray = [];
+            try {
+                statusArray = JSON.parse(game.status || "[]");
+            } catch (error) {
+                console.error("Error parsing status for game:", game.name, error);
+            }
+
+            // Set background color based on the parsed status
+            if (statusArray.includes(user.email)) {
+                resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
+            } else if (statusArray.length > 0) {
+                resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
+            } else {
+                resultDiv.style.backgroundColor = ""; // Default background
             }
 
             var thumbnailImg = document.createElement('img');
@@ -636,9 +648,21 @@ function searchLibrary(button) {
                     var resultDiv = document.createElement('div');
                     resultDiv.className = 'result-item';
 
-                    // Check the fourth column data and change background color if it's 'Y'
-                    if (game.status === 'Y') {
-                        resultDiv.style.backgroundColor = 'green';
+                    // Parse the "Status" column (assumes it's a JSON array)
+                    let statusArray = [];
+                    try {
+                        statusArray = JSON.parse(game.status || "[]");
+                    } catch (error) {
+                        console.error("Error parsing status for game:", game.name, error);
+                    }
+        
+                    // Set background color based on the parsed status
+                    if (statusArray.includes(user.email)) {
+                        resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
+                    } else if (statusArray.length > 0) {
+                        resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
+                    } else {
+                        resultDiv.style.backgroundColor = ""; // Default background
                     }
 
                     var thumbnailImg = document.createElement('img');
@@ -749,27 +773,38 @@ function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
 }
 
 function updateGameInSheet(game) {
-    // Define the payload to send to the Google Apps Script
+    const user = auth.currentUser;
+    const selectedLibrary = game.owner;
+    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
+
+    // Determine whether to add or remove the user from the status array
+    const action = game.status.includes(user.email) ? "remove" : "add";
+
     const payload = {
-        action: 'update',
+        action: "update",
         objectId: game.objectId,
-        newHighlightValue: game.status
+        user: user.email,
+        change: action, // "add" or "remove"
     };
 
-    // Send the update request to the Google Apps Script Web App
-    var selectedLibrary = game.owner;
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
     fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        //mode: 'no-cors',
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
     })
-    .then(response => console.log('Sheet updated'))
-    .catch(error => console.error('Error:', error));
+    .then(() => {
+        console.log(`Game status updated for ${game.name}: ${action}`);
+        // Update the UI to reflect the change
+        displayGamesTab(); // Refresh the games tab to show the updated colors
+    })
+    .catch(error => {
+        console.error("Error updating game status:", error);
+    });
 }
+
 
 function sendToGoogleSheet(data) {
     var selectedLibrary = document.getElementById('libraryDropdown').value;
