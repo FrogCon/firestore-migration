@@ -547,7 +547,7 @@ function displayGamesTab() {
             addActionText.style = `background-color: rgba(0, 0, 0, 0.5); padding: 0.5rem 1rem; border-radius: 0.5rem;`;
             addActionOverlay.appendChild(addActionText);
             addActionOverlay.onclick = function(event) {
-                createGameClickHandler(game, resultDiv);
+                createGameClickHandler(game, resultDiv)();
                 hideOverlays(websiteOverlay, addActionOverlay);
                 // Re-enable showing overlays on click
                 resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
