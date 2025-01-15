@@ -810,9 +810,17 @@ function updateGameInSheet(game) {
     const selectedLibrary = game.owner;
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
 
-    // Determine whether to add or remove the user from the status array
-    const action = game.status.includes(user.email) ? "remove" : "add";
+    // Parse the status string into an array
+    let statusArray = [];
+    try {
+        statusArray = JSON.parse(game.status || "[]");
+    } catch (error) {
+        console.error("Error parsing game status:", error);
+    }
 
+    // Determine whether to add or remove the user from the array
+    const action = statusArray.includes(user.email) ? "remove" : "add";
+	
     const payload = {
         action: "update",
         objectId: game.objectId,
@@ -830,14 +838,11 @@ function updateGameInSheet(game) {
     })
     .then(() => {
         console.log(`Game status updated for ${game.name}: ${action}`);
-        // Update the UI to reflect the change
-        displayGamesTab(); // Refresh the games tab to show the updated colors
     })
     .catch(error => {
         console.error("Error updating game status:", error);
     });
 }
-
 
 function sendToGoogleSheet(data) {
     var selectedLibrary = document.getElementById('libraryDropdown').value;
