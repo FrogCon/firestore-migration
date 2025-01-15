@@ -572,21 +572,12 @@ function displayGamesTab() {
         checkbox.addEventListener('change', function() {
 	    const allGameItems = document.querySelectorAll('.result-item');
 	    allGameItems.forEach(item => {
-	        // Parse the status array from the data-status attribute
-	        let statusArray = [];
-	        try {
-	            statusArray = JSON.parse(item.dataset.status || "[]");
-	        } catch (error) {
-	            console.error("Error parsing status:", error);
-	        }
+	        // Check if data-status contains any text (indicating users)
+	        const hasUsers = item.dataset.status && item.dataset.status.trim() !== "";
 	
-	        // Determine the equivalent of "Y" or "N"
-	        const hasUsers = statusArray.length > 0; // Equivalent to "Y"
-	        const isEmpty = statusArray.length === 0; // Equivalent to "N"
-	
-	        // Apply display logic based on the checkbox state and status
+	        // Apply display logic
 	        if (this.checked) {
-	            if (isEmpty) {
+	            if (!hasUsers) {
 	                item.style.display = 'none'; // Hide games with no users
 	            }
 	        } else {
