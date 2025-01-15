@@ -422,7 +422,7 @@ function displaySearchResults(data, button) {
         resultDiv.appendChild(thumbnailImg);
         resultDiv.appendChild(nameDiv);
 
-        var status = 'N';
+        var status = '[]';
 
         // Setup click event
         resultDiv.onclick = createClickHandler(name, objectId, thumbnailImg, status, resultDiv);
@@ -743,59 +743,68 @@ function createRemoveClickHandler(game, resultDiv) {
 }
 
 function createGameClickHandler(game, resultDiv) {
-    if (!isLoggedIn()) return;
+	if (!isLoggedIn()) return;
 
-    return function () {
-        if (game.animating) return; // Prevent handling clicks if animation is ongoing
+	return function () {
+		if (game.animating) return; // Prevent handling clicks if animation is ongoing
 
-        const user = auth.currentUser;
+	        const user = auth.currentUser;
+	
+	        game.animating = true; // Set the animating flag
+	
+	        // Parse the status array from the game's status field
+	        let statusArray = [];
+	        try {
+	            	statusArray = JSON.parse(game.status || "[]");
+			console.log("Game Status is: ", game.status);
+			console.log("Status Array is: ", statusArray;
+	        } catch (error) {
+	            	console.error("Error parsing game status:", error);
+	        }
 
-        game.animating = true; // Set the animating flag
-
-        // Parse the status array from the game's status field
-        let statusArray = [];
-        try {
-            statusArray = JSON.parse(game.status || "[]");
-        } catch (error) {
-            console.error("Error parsing game status:", error);
-        }
-
-        // Toggle the current user's email in the array
-        if (statusArray.includes(user.email)) {
-            // Remove the user if already in the array
-            statusArray = statusArray.filter(email => email !== user.email);
-        } else {
-            // Add the user if not already in the array
-            statusArray.push(user.email);
-        }
-
-        // Update the game.status to the updated array as a JSON string
-        game.status = JSON.stringify(statusArray);
-	    resultDiv.dataset.status = statusArray;
-
-	    // Send the updated status to Google Sheets
-        updateGameInSheet(game);
-
-        // Update the background color based on the status
-        if (statusArray.includes(user.email)) {
-            resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
-        } else if (statusArray.length > 0) {
-            resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
-        } else {
-            resultDiv.style.backgroundColor = ""; // Default background
-        }
-
-        // Reset animation flag after animation completes
-        resultDiv.style.animation = "spin-grow 1s linear forwards";
-        resultDiv.addEventListener(
-            "animationend",
-            function () {
-                resultDiv.style.animation = "";
-                game.animating = false;
-            },
-            { once: true }
-        );
-    };
+		const action = "remove";
+	        // Toggle the current user's email in the array
+	        if (statusArray.includes(user.email)) {
+	            	// Remove the user if already in the array
+	            	statusArray = statusArray.filter(email => email !== user.email);
+			action = "remove";
+			console.log("Removed User Email");
+	        } else {
+	            	// Add the user if not already in the array
+	            	statusArray.push(user.email);
+			action = "add";
+			console.log("Removed User Email");
+	        }
+	
+	        // Update the game.status to the updated array as a JSON string
+	        game.status = JSON.stringify(statusArray);
+		resultDiv.dataset.status = statusArray;
+		console.log("Game Status is: ", game.status);
+		console.log("Status Array is: ", statusArray;
+	
+		// Send the updated status to Google Sheets
+	        updateGameInSheet(game, action);
+	
+	        // Update the background color based on the status
+	        if (statusArray.includes(user.email)) {
+	        	resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
+	        } else if (statusArray.length > 0) {
+	        	resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
+	        } else {
+	        	resultDiv.style.backgroundColor = ""; // Default background
+	        }
+	
+	        // Reset animation flag after animation completes
+	        resultDiv.style.animation = "spin-grow 1s linear forwards";
+	        resultDiv.addEventListener(
+			"animationend",
+			function () {
+				resultDiv.style.animation = "";
+				game.animating = false;
+			},
+			{ once: true }
+		);
+	};
 }
 
 function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
@@ -805,22 +814,11 @@ function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
     };
 }
 
-function updateGameInSheet(game) {
+function updateGameInSheet(game, action) {
     const user = auth.currentUser;
     const selectedLibrary = game.owner;
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
 
-    // Parse the status string into an array
-    let statusArray = [];
-    try {
-        statusArray = JSON.parse(game.status || "[]");
-    } catch (error) {
-        console.error("Error parsing game status:", error);
-    }
-
-    // Determine whether to add or remove the user from the array
-    const action = statusArray.includes(user.email) ? "remove" : "add";
-	
     const payload = {
         action: "update",
         objectId: game.objectId,
