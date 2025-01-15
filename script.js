@@ -295,7 +295,7 @@ function prepareData(data) {
             thumbnail = 'https://raw.githubusercontent.com/FrogCon/Library/main/no-image.png';
         }
 
-        var status = 'N';
+        var status = '[]';
         extractedData.push({ name, objectId: objectIdNum, thumbnail, status });
     }
 
@@ -439,7 +439,7 @@ function displaySearchResults(data, button) {
 function displayGamesTab() {
     showLoadingOverlay();
     fetchAllGames().then(gamesData => {
-        const user = auth.currentUser;
+        const user = auth.currentUser ? auth.currentUser : { email: "nouser@email.com" };
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
 
@@ -570,19 +570,30 @@ function displayGamesTab() {
         hideLoadingOverlay();
 
         checkbox.addEventListener('change', function() {
-            var allGameItems = document.querySelectorAll('.result-item');
-            allGameItems.forEach(item => {
-                // Assuming the game status is stored in a data attribute or can be inferred from the item
-                var status = item.dataset.status; // Update according to how you store the status
-                if (this.checked) {
-                    if (status === 'N') {
-                        item.style.display = 'none'; // Hide games with "N" status
-                    }
-                } else {
-                    item.style.display = ''; // Show all games
-                }
-            });
-        });
+	    const allGameItems = document.querySelectorAll('.result-item');
+	    allGameItems.forEach(item => {
+	        // Parse the status array from the data-status attribute
+	        let statusArray = [];
+	        try {
+	            statusArray = JSON.parse(item.dataset.status || "[]");
+	        } catch (error) {
+	            console.error("Error parsing status:", error);
+	        }
+	
+	        // Determine the equivalent of "Y" or "N"
+	        const hasUsers = statusArray.length > 0; // Equivalent to "Y"
+	        const isEmpty = statusArray.length === 0; // Equivalent to "N"
+	
+	        // Apply display logic based on the checkbox state and status
+	        if (this.checked) {
+	            if (isEmpty) {
+	                item.style.display = 'none'; // Hide games with no users
+	            }
+	        } else {
+	            item.style.display = ''; // Show all games
+	        }
+	    });
+	});
     });
 }
 
