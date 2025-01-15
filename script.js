@@ -563,20 +563,28 @@ function displayGamesTab() {
 		addActionImage.src = './thumbUp.png'; // Path to the image
 		addActionImage.alt = 'Add/Remove';
 		addActionImage.style = `
-		    width: 24px; 
-		    height: 24px; 
-		    background-color: rgba(0, 0, 0, 0.5); 
-		    padding: 0.5rem; 
-		    border-radius: 50%;
+		    width: 90px; 
+		    height: 90px; 
 		`;
 		
 		// Append the image to the overlay
 		addActionOverlay.appendChild(addActionImage);
+
+		// Update the color of the image based on data-status
+		function updateThumbColor() {
+		    const status = resultDiv.dataset.status || "";
+		    const hasUsers = status.trim() !== ""; // Check if there are any users in data-status
+		    addActionImage.style.filter = hasUsers ? "none" : "grayscale(100%)"; // Gray if no users
+		}
+		
+		// Call updateThumbColor initially and on data-status changes
+		updateThumbColor();
 		
 		// Click handler for the overlay
 		addActionOverlay.onclick = function(event) {
 		    createGameClickHandler(game, resultDiv)();
 		    hideOverlays(websiteOverlay, addActionOverlay);
+		    updateThumbColor();
 		    // Re-enable showing overlays on click
 		    resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
 		    event.stopPropagation(); // Prevent triggering clicks on underlying elements
