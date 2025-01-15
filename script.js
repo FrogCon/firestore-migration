@@ -702,8 +702,6 @@ function createClickHandler(name, objectId, thumbnailImg, status, resultDiv) {
             }
         });
 
-        //sendToGoogleSheet({ games: [{ name, objectId: Number(objectId), thumbnail: thumbnailImg.src, status }] });
-
         // Update the background color
         resultDiv.style.backgroundColor = 'green';
         resultDiv.style.animation = 'spin-grow 1s linear forwards';
@@ -731,8 +729,9 @@ function createGameClickHandler(game, resultDiv) {
 	if (!isLoggedIn()) return;
 
 	return function () {
+		console.log("Click registered");
 		if (game.animating) return; // Prevent handling clicks if animation is ongoing
-
+		console.log("Proceeding");
 	        const user = auth.currentUser;
 	
 	        game.animating = true; // Set the animating flag
