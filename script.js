@@ -968,8 +968,6 @@ function populateLibraryDropdown() {
             const addLibraryOption = document.createElement('option');
             addLibraryOption.value = "newLibrary";
             addLibraryOption.textContent = "Add New Library";
-            addLibraryOption.style.fontStyle = "italic";
-            addLibraryOption.style.fontWeight = "bold";
 
             libraryDropdown.length = 1; // Reset dropdown
             libraryDropdown.selectedIndex = 0;
