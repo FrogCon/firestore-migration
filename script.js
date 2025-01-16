@@ -475,13 +475,18 @@ function displayGamesTab() {
 	// Filter out LibraryMetadata entries
         gamesData = gamesData.filter(game => game.owner.toLowerCase() !== "librarymetadata");
 
-        // Sort the gamesData alphabetically by the 'name' property
-        var sortedGames = gamesData.sort((a, b) => {
-            if (a.owner === b.owner) {
-                return a.name.localeCompare(b.name);
-            }
-            return a.owner.localeCompare(b.owner);
-        });
+        // Sort the gamesData with new games appearing first, then alphabetically
+	var sortedGames = gamesData.sort((a, b) => {
+	    // Prioritize new games (Y comes before N)
+	    if (a.newGame === "Y" && b.newGame !== "Y") return -1;
+	    if (a.newGame !== "Y" && b.newGame === "Y") return 1;
+	
+	    // If both are new or neither are new, sort alphabetically by owner
+	    if (a.owner === b.owner) {
+	        return a.name.localeCompare(b.name); // Alphabetical by name
+	    }
+	    return a.owner.localeCompare(b.owner); // Alphabetical by owner
+	});
 
         var currentOwner = null;
         var ownerDiv;
