@@ -894,7 +894,8 @@ function updateGameInSheet(game, action) {
 
 function sendToGoogleSheet(data) {
     var selectedLibrary = document.getElementById('libraryDropdown').value;
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
+    const user = auth.currentUser;
+    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}&email=${user.email}`;
     fetch(url, {
         method: 'POST',
         mode: 'no-cors', // As Google Apps Script does not support CORS
