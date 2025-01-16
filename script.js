@@ -548,14 +548,10 @@ function displayGamesTab() {
 		    newGameIndicator.alt = 'New Game';
 		    newGameIndicator.style = `
 		        position: absolute; 
-		        top: 0; 
-		        left: 0; 
+		        top: -10; 
+		        left: -10; 
 		        width: 40px; 
 		        height: 40px; 
-		        border-top-left-radius: 8px; 
-		        background-color: rgba(255, 255, 255, 0.8); 
-		        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
-		        z-index: 5; /* Ensure it appears above other elements */
 		    `;
 		
 		    // Append the "New Game" indicator to the resultDiv
