@@ -929,8 +929,24 @@ function removeFromGoogleSheet(objectId) {
 }
 
 function populateLibraryDropdown() {
-    showLoadingOverlay();
+    const libraryDropdown = document.getElementById('libraryDropdown');
+    libraryDropdown.length = 1; // Clear all options except the default one
+    libraryDropdown.selectedIndex = 0;
+
     const user = auth.currentUser;
+    if (!user) {
+        // User is not logged in; show a message
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "Please login to use this feature...";
+        option.disabled = true;
+        libraryDropdown.appendChild(option);
+
+        hideLoadingOverlay();
+        return; // Exit function early
+    }
+
+    showLoadingOverlay();
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
     fetch(url, {
         method: "GET",
@@ -948,7 +964,6 @@ function populateLibraryDropdown() {
                 return;
             }
 
-            const libraryDropdown = document.getElementById('libraryDropdown');
             libraryDropdown.length = 2; // Reset dropdown
             libraryDropdown.selectedIndex = 0;
 
