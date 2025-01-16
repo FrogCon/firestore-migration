@@ -12,6 +12,7 @@ const signUpButton = document.getElementById("signUpButton");
 const loginButton = document.getElementById("loginButton");
 const submitLoginButton = document.getElementById("submitLoginButton");
 const userStatus = document.getElementById("userStatus");
+let activeTab = "Home";
 
 // Import Firebase modules
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -74,6 +75,13 @@ onAuthStateChanged(auth, (user) => {
         userStatus.textContent = "Not Logged In";
         loginButton.style.display = "block";
         logoutButton.style.display = "none";
+    }
+
+    // Call the appropriate function for the active tab
+    if (activeTab === "Games") {
+        displayGamesTab();
+    } else if (activeTab === "ModifyGames") {
+        populateLibraryDropdown();
     }
 });
 
@@ -207,6 +215,9 @@ function openTab(evt, tabName) {
         document.getElementById('bggSearchQuery').value = '';
         document.getElementById('libraryResults').innerHTML = '';
     }
+
+    // Update the active tab
+    activeTab = tabName;
 
     // Show the selected tab and set the clicked button as active
     document.getElementById(tabName).style.display = "block";
