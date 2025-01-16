@@ -548,8 +548,8 @@ function displayGamesTab() {
 		    newGameIndicator.alt = 'New Game';
 		    newGameIndicator.style = `
 		        position: absolute; 
-		        top: -10; 
-		        left: -10; 
+		        top: -10px; 
+		        left: -10px; 
 		        width: 40px; 
 		        height: 40px; 
 		    `;
