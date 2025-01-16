@@ -929,9 +929,17 @@ function removeFromGoogleSheet(objectId) {
 
 function populateLibraryDropdown() {
     showLoadingOverlay();
-    fetch('https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames')
+    const user = auth.currentUser;
+    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
+    fetch(url)
         .then(response => response.json())
         .then(sheetNames => {
+            if (sheetNames.error) {
+                alert(sheetNames.error);
+                hideLoadingOverlay();
+                return;
+            }
+
             const libraryDropdown = document.getElementById('libraryDropdown');
             // Keep the first two options and remove the rest
             libraryDropdown.length = 2;
@@ -946,9 +954,14 @@ function populateLibraryDropdown() {
                 option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
                 libraryDropdown.appendChild(option);
             });
+
             hideLoadingOverlay();
         })
-    .catch(error => console.error('Error fetching sheet names:', error));
+        .catch(error => {
+            console.error('Error fetching sheet names:', error);
+            alert("An error occurred while fetching library options.");
+            hideLoadingOverlay();
+        });
 }
 
 function handleLibraryChange() {
