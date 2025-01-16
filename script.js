@@ -931,9 +931,16 @@ function populateLibraryDropdown() {
     showLoadingOverlay();
     const user = auth.currentUser;
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
-    fetch(url)
-        .then(response => response.json())
-        .then(sheetNames => {
+    fetch(url, {
+        method: "GET",
+        redirect: "follow", // Ensure redirects are followed
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8", // Avoid preflight
+        },
+    })
+        .then(response => response.text()) // Read response as text
+        .then(text => {
+            const sheetNames = JSON.parse(text); // Parse JSON manually
             if (sheetNames.error) {
                 alert(sheetNames.error);
                 hideLoadingOverlay();
@@ -941,15 +948,12 @@ function populateLibraryDropdown() {
             }
 
             const libraryDropdown = document.getElementById('libraryDropdown');
-            // Keep the first two options and remove the rest
-            libraryDropdown.length = 2;
+            libraryDropdown.length = 2; // Reset dropdown
             libraryDropdown.selectedIndex = 0;
 
-            // Sort sheet names alphabetically
-            sheetNames.sort((a, b) => a.localeCompare(b));
-
+            sheetNames.sort((a, b) => a.localeCompare(b)); // Sort names
             sheetNames.forEach(name => {
-                let option = document.createElement('option');
+                const option = document.createElement('option');
                 option.value = name.toLowerCase();
                 option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
                 libraryDropdown.appendChild(option);
@@ -958,7 +962,7 @@ function populateLibraryDropdown() {
             hideLoadingOverlay();
         })
         .catch(error => {
-            console.error('Error fetching sheet names:', error);
+            console.error("Error fetching sheet names:", error);
             alert("An error occurred while fetching library options.");
             hideLoadingOverlay();
         });
