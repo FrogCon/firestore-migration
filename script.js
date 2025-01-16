@@ -307,7 +307,8 @@ function prepareData(data) {
         }
 
         var status = '[]';
-        extractedData.push({ name, objectId: objectIdNum, thumbnail, status });
+	var newGame = 'Y';
+        extractedData.push({ name, objectId: objectIdNum, thumbnail, status, newGame });
     }
 
     // Display an alert with the first 10 names and ask for confirmation
@@ -434,9 +435,10 @@ function displaySearchResults(data, button) {
         resultDiv.appendChild(nameDiv);
 
         var status = '[]';
+	var newGame = 'Y';
 
         // Setup click event
-        resultDiv.onclick = createClickHandler(name, objectId, thumbnailImg, status, resultDiv);
+        resultDiv.onclick = createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv);
 
         rowDiv.appendChild(resultDiv);
 
@@ -770,11 +772,11 @@ function toggleOwnerGames(ownerDiv) {
     ownerDiv.style.display = ownerDiv.style.display === 'none' ? 'block' : 'none';
 }
 
-function createClickHandler(name, objectId, thumbnailImg, status, resultDiv) {
+function createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv) {
     if (!isLoggedIn()) return;
     
     return function() {
-        var extractedData = [{ name, objectId: Number(objectId), thumbnail: thumbnailImg.src, status }];
+        var extractedData = [{ name, objectId: Number(objectId), thumbnail: thumbnailImg.src, status, newGame }];
         
         fetchExistingGames().then(gamesDataFromSheet => {
             var uniqueGames = extractedData.filter(game => !gamesDataFromSheet.map(g => g.objectId).includes(game.objectId));
