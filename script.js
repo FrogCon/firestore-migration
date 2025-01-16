@@ -470,6 +470,9 @@ function displayGamesTab() {
         checkboxDiv.appendChild(label);
         gamesDiv.appendChild(checkboxDiv);
 
+	// Filter out LibraryMetadata entries
+        gamesData = gamesData.filter(game => game.owner.toLowerCase() !== "librarymetadata");
+
         // Sort the gamesData alphabetically by the 'name' property
         var sortedGames = gamesData.sort((a, b) => {
             if (a.owner === b.owner) {
