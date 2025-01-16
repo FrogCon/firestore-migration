@@ -941,13 +941,13 @@ function populateLibraryDropdown() {
         option.textContent = "Please login to use this feature...";
         option.disabled = true;
         libraryDropdown.appendChild(option);
-
         hideLoadingOverlay();
-        return; // Exit function early
+        return;
     }
 
     showLoadingOverlay();
-    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
+
+    const url = `https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?type=sheetNames&email=${user.email}`;
     fetch(url, {
         method: "GET",
         redirect: "follow", // Ensure redirects are followed
@@ -964,16 +964,30 @@ function populateLibraryDropdown() {
                 return;
             }
 
-            libraryDropdown.length = 2; // Reset dropdown
+            // Keep the "Add New Library" option
+            const addLibraryOption = document.createElement('option');
+            addLibraryOption.value = "newLibrary";
+            addLibraryOption.textContent = "Add New Library";
+            addLibraryOption.style.fontStyle = "italic";
+            addLibraryOption.style.fontWeight = "bold";
+
+            libraryDropdown.length = 1; // Reset dropdown
             libraryDropdown.selectedIndex = 0;
 
-            sheetNames.sort((a, b) => a.localeCompare(b)); // Sort names
-            sheetNames.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name.toLowerCase();
-                option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-                libraryDropdown.appendChild(option);
-            });
+            // Add valid sheet names, filtering out invalid options
+            sheetNames
+                .filter(name => name.trim() !== "") // Exclude empty names
+                .filter(name => name.toLowerCase() !== "librarymetadata") // Exclude LibraryMetadata
+                .sort((a, b) => a.localeCompare(b)) // Sort names alphabetically
+                .forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name.toLowerCase();
+                    option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+                    libraryDropdown.appendChild(option);
+                });
+
+            // Add the "Add New Library" option to the dropdown
+            libraryDropdown.appendChild(addLibraryOption);
 
             hideLoadingOverlay();
         })
