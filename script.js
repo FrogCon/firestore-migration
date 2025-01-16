@@ -931,7 +931,10 @@ function populateLibraryDropdown() {
     showLoadingOverlay();
     const user = auth.currentUser;
     const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
-    fetch(url)
+    fetch(url, {
+        method: 'GET',
+        mode: 'no-cors',
+    })
         .then(response => response.json())
         .then(sheetNames => {
             if (sheetNames.error) {
