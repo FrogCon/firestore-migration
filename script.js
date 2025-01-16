@@ -541,6 +541,27 @@ function displayGamesTab() {
             nameDiv.innerHTML = game.name;
             nameDiv.className = 'game-name';
 
+	    if (game.newGame === "Y") {
+		    // Create a "New Game" indicator
+		    const newGameIndicator = document.createElement('img');
+		    newGameIndicator.src = './newIcon.png'; // Path to the "new game" icon
+		    newGameIndicator.alt = 'New Game';
+		    newGameIndicator.style = `
+		        position: absolute; 
+		        top: 0; 
+		        left: 0; 
+		        width: 40px; 
+		        height: 40px; 
+		        border-top-left-radius: 8px; 
+		        background-color: rgba(255, 255, 255, 0.8); 
+		        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+		        z-index: 5; /* Ensure it appears above other elements */
+		    `;
+		
+		    // Append the "New Game" indicator to the resultDiv
+		    resultDiv.appendChild(newGameIndicator);
+		}
+
             // Create overlays but keep them hidden initially
             var websiteOverlay = document.createElement('div');
             websiteOverlay.style = 'position: absolute; top: 0; left: 0; width: 100%; height: 50%; background-color: rgba(255, 0, 0, 0.5); color: white; display: flex; justify-content: center; align-items: center; display: none; border-top-left-radius: 1rem; border-top-right-radius: 1rem; text-shadow: 2px 2px 4px #000000;';
