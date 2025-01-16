@@ -544,7 +544,7 @@ function displayGamesTab() {
 	    if (game.newGame === "Y") {
 		    // Create a "New Game" indicator
 		    const newGameIndicator = document.createElement('img');
-		    newGameIndicator.src = './newIcon.png'; // Path to the "new game" icon
+		    newGameIndicator.src = './new.png'; // Path to the "new game" icon
 		    newGameIndicator.alt = 'New Game';
 		    newGameIndicator.style = `
 		        position: absolute; 
