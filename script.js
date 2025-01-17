@@ -151,11 +151,11 @@ document.getElementById("submitForgotPasswordButton").addEventListener("click", 
         return;
     }
 
-    sendPasswordResetEmail(email)
+    sendPasswordResetEmail(auth, email) // Pass the auth instance as the first argument
         .then(() => {
             alert("Password reset email sent! Please check your inbox.");
             document.getElementById("forgotPasswordModal").style.display = "none";
-	    document.getElementById("forgotPasswordEmail").value = "";
+            document.getElementById("forgotPasswordEmail").value = ""; // Clear the email field
         })
         .catch(error => {
             console.error("Error sending password reset email:", error.message);
