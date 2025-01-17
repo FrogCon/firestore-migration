@@ -6,6 +6,7 @@ var currentActiveOverlays = {
 };
 const loginModal = document.getElementById("loginModal");
 const signUpModal = document.getElementById("signUpModal");
+const forgotPasswordModal = document.getElementById("forgotPasswordModal");
 const closeLoginModal = document.getElementById("closeLoginModal");
 const closeSignUpModal = document.getElementById("closeSignUpModal");
 const signUpButton = document.getElementById("signUpButton");
@@ -15,7 +16,7 @@ const userStatus = document.getElementById("userStatus");
 let activeTab = "Home";
 
 // Import Firebase modules
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 // Get references to Firebase services
@@ -129,6 +130,39 @@ closeSignUpModal.addEventListener("click", () => {
     document.getElementById("confirmPassword").value = "";
 });
 
+// Open the forgot password modal
+document.getElementById("forgotPasswordLink").addEventListener("click", () => {
+    document.getElementById("forgotPasswordModal").style.display = "block";
+    document.getElementById("loginModal").style.display = "none";
+});
+
+// Close the forgot password modal
+document.getElementById("closeForgotPasswordModal").addEventListener("click", () => {
+    document.getElementById("forgotPasswordModal").style.display = "none";
+    document.getElementById("forgotPasswordEmail").value = "";
+});
+
+// Send password reset email
+document.getElementById("submitForgotPasswordButton").addEventListener("click", () => {
+    const email = document.getElementById("forgotPasswordEmail").value;
+
+    if (!email) {
+        alert("Please enter your email address.");
+        return;
+    }
+
+    firebase.auth().sendPasswordResetEmail(email)
+        .then(() => {
+            alert("Password reset email sent! Please check your inbox.");
+            document.getElementById("forgotPasswordModal").style.display = "none";
+	    document.getElementById("forgotPasswordEmail").value = "";
+        })
+        .catch(error => {
+            console.error("Error sending password reset email:", error.message);
+            alert("Failed to send reset email. Please try again.");
+        });
+});
+
 // Close modals if clicking outside them
 window.addEventListener("click", (event) => {
     if (event.target === loginModal) {
@@ -141,6 +175,10 @@ window.addEventListener("click", (event) => {
         document.getElementById("signUpEmail").value = "";
         document.getElementById("signUpPassword").value = "";
         document.getElementById("confirmPassword").value = "";
+    }
+    if (event.target === forgotPasswordModal) {
+        forgotPasswordModal.style.display = "none";
+	document.getElementById("forgotPasswordEmail").value = "";
     }
 });
 
