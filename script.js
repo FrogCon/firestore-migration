@@ -26,7 +26,7 @@ const db = getFirestore(); // Uses the same app
 function signUp(email, password) {
     createUserWithEmailAndPassword(auth, email, password)
         .then(userCredential => {
-            console.log("User signed up:", userCredential.user);
+            console.log("User signed up");
             login(email, password);
             signUpModal.style.display = "none";
         })
@@ -39,7 +39,7 @@ function signUp(email, password) {
 function login(email, password) {
     signInWithEmailAndPassword(auth, email, password)
         .then(userCredential => {
-            console.log("User logged in:", userCredential.user);
+            console.log("User logged in");
             alert("Login successful!");
             // Close the login modal
             const loginModal = document.getElementById("loginModal");
@@ -303,7 +303,7 @@ function prepareData(data) {
             thumbnail = thumbnailElements[0].textContent;
         } else {
             // Set a default thumbnail or handle the absence of a thumbnail
-            thumbnail = 'https://raw.githubusercontent.com/FrogCon/Library/main/no-image.png';
+            thumbnail = './no-image.png';
         }
 
         var status = '[]';
@@ -847,8 +847,6 @@ function createGameClickHandler(game, resultDiv) {
 	        let statusArray = [];
 	        try {
 	            	statusArray = JSON.parse(game.status || "[]");
-			console.log("Game Status is: ", game.status);
-			console.log("Status Array is: ", statusArray);
 	        } catch (error) {
 	            	console.error("Error parsing game status:", error);
 	        }
@@ -859,19 +857,15 @@ function createGameClickHandler(game, resultDiv) {
 	            	// Remove the user if already in the array
 	            	statusArray = statusArray.filter(email => email !== user.email);
 			action = "remove";
-			console.log("Removed User Email");
 	        } else {
 	            	// Add the user if not already in the array
 	            	statusArray.push(user.email);
 			action = "add";
-			console.log("Removed User Email");
 	        }
 	
 	        // Update the game.status to the updated array as a JSON string
 	        game.status = JSON.stringify(statusArray);
 		resultDiv.dataset.status = statusArray;
-		console.log("Game Status is: ", game.status);
-		console.log("Status Array is: ", statusArray);
 	
 		// Send the updated status to Google Sheets
 	        updateGameInSheet(game, action);
