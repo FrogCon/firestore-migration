@@ -368,6 +368,12 @@
                     <button id="submitLoginButton" type="button">Submit</button>
                     <button id="signUpButton" type="button">Sign Up</button>
                 </form>
+                <!-- Forgot Password Link -->
+                <p>
+                    <a href="#" id="forgotPasswordLink" style="color: #007BFF; text-decoration: underline; cursor: pointer;">
+                        Forgot your password?
+                    </a>
+                </p>
             </div>
         </div>
 
@@ -391,6 +397,17 @@
             </div>
         </div>
 
+        <div id="forgotPasswordModal" class="modal">
+            <div class="modal-content">
+                <span id="closeForgotPasswordModal" class="close">&times;</span>
+                <h2>Reset Password</h2>
+                <form id="forgotPasswordForm">
+                    <label for="forgotPasswordEmail">Email:</label><br>
+                    <input type="email" id="forgotPasswordEmail" placeholder="Enter your email"><br><br>
+                    <button id="submitForgotPasswordButton" type="button">Send Reset Link</button>
+                </form>
+            </div>
+        </div>
 
         <div class="tab">
             <button id="homeTab" class="tablinks" data-tab="Home">Home</button>
