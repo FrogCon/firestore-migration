@@ -151,7 +151,7 @@ document.getElementById("submitForgotPasswordButton").addEventListener("click", 
         return;
     }
 
-    firebase.auth().sendPasswordResetEmail(email)
+    sendPasswordResetEmail(email)
         .then(() => {
             alert("Password reset email sent! Please check your inbox.");
             document.getElementById("forgotPasswordModal").style.display = "none";
