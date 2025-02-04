@@ -263,7 +263,6 @@ function openTab(evt, tabName) {
 document.getElementById("homeTab").addEventListener("click", (event) => openTab(event, "Home"));
 document.getElementById("gamesTab").addEventListener("click", (event) => openTab(event, "Games"));
 document.getElementById("modifyGamesTab").addEventListener("click", (event) => openTab(event, "ModifyGames"));
-document.getElementById("libraryDropdown").addEventListener("change", handleLibraryChange);
 document.getElementById("getCollectionButton").addEventListener("click", getCollection);
 document.getElementById("searchGamesButton").addEventListener("click", () => searchGames(document.getElementById("searchGamesButton")));
 document.getElementById("searchLibraryButton").addEventListener("click", () => searchLibrary(document.getElementById("searchLibraryButton")));
@@ -359,7 +358,7 @@ function prepareData(data) {
     // 2) If confirmed, fetch user's Firestore games (via UID)
     statusDiv.innerHTML = 'Updating Database...';
   
-    fetchUserOwnedGamesByUID()
+    fetchUserGames()
       .then(existingGames => {
         // existingGames: array of { name, objectId, thumbnail, owners, ... }
   
@@ -406,7 +405,7 @@ function prepareData(data) {
   }
   
 
-async function fetchUserOwnedGamesByUID() {
+async function fetchUserGames() {
     const userUID = auth.currentUser.uid;  // <-- get the UID, not email
     const q = query(collection(db, "games"), where("owners", "array-contains", userUID));
     const snapshot = await getDocs(q);
@@ -522,10 +521,9 @@ function displayGamesTab() {
 
     console.time("fetchAllGames");
     fetchAllGames().then(gamesData => {
-	console.timeEnd("fetchAllGames");
+        console.timeEnd("fetchAllGames");
 
-	console.time("processAndBuildDOM");
-        const user = auth.currentUser ? auth.currentUser : { email: "nouser@email.com" };
+        const user = auth.currentUser ? auth.currentUser : { email: "" };
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
 
@@ -545,23 +543,23 @@ function displayGamesTab() {
         checkboxDiv.appendChild(label);
         gamesDiv.appendChild(checkboxDiv);
 
-	// Filter out LibraryMetadata entries
+        // Filter out LibraryMetadata entries
         gamesData = gamesData.filter(game => game.owner.toLowerCase() !== "librarymetadata");
 
-	// Sort the gamesData: Group by owner, new games first within each group, then alphabetically by name
-	var sortedGames = gamesData.sort((a, b) => {
-	    // Group by owner
-	    if (a.owner !== b.owner) {
-	        return a.owner.localeCompare(b.owner); // Alphabetical by owner
-	    }
-	
-	    // Within the same owner, prioritize new games
-	    if (a.newGame === "Y" && b.newGame !== "Y") return -1;
-	    if (a.newGame !== "Y" && b.newGame === "Y") return 1;
-	
-	    // If both are the same type (new or not), sort alphabetically by name
-	    return a.name.localeCompare(b.name);
-	});
+        // Sort the gamesData: Group by owner, new games first within each group, then alphabetically by name
+        var sortedGames = gamesData.sort((a, b) => {
+            // Group by owner
+            if (a.owner !== b.owner) {
+                return a.owner.localeCompare(b.owner); // Alphabetical by owner
+            }
+        
+            // Within the same owner, prioritize new games
+            if (a.newGame === "Y" && b.newGame !== "Y") return -1;
+            if (a.newGame !== "Y" && b.newGame === "Y") return 1;
+        
+            // If both are the same type (new or not), sort alphabetically by name
+            return a.name.localeCompare(b.name);
+        });
 
 
         var currentOwner = null;
@@ -622,22 +620,22 @@ function displayGamesTab() {
             nameDiv.innerHTML = game.name;
             nameDiv.className = 'game-name';
 
-	    if (game.newGame === "Y") {
-		    // Create a "New Game" indicator
-		    const newGameIndicator = document.createElement('img');
-		    newGameIndicator.src = './new.png'; // Path to the "new game" icon
-		    newGameIndicator.alt = 'New Game';
-		    newGameIndicator.style = `
-		        position: absolute; 
-		        top: -10px; 
-		        left: -10px; 
-		        width: 40px; 
-		        height: 40px; 
-		    `;
-		
-		    // Append the "New Game" indicator to the resultDiv
-		    resultDiv.appendChild(newGameIndicator);
-		}
+            if (game.newGame === "Y") {
+                // Create a "New Game" indicator
+                const newGameIndicator = document.createElement('img');
+                newGameIndicator.src = './new.png'; // Path to the "new game" icon
+                newGameIndicator.alt = 'New Game';
+                newGameIndicator.style = `
+                    position: absolute; 
+                    top: -10px; 
+                    left: -10px; 
+                    width: 40px; 
+                    height: 40px; 
+                `;
+            
+                // Append the "New Game" indicator to the resultDiv
+                resultDiv.appendChild(newGameIndicator);
+            }
 
             // Create overlays but keep them hidden initially
             var websiteOverlay = document.createElement('div');
@@ -655,87 +653,86 @@ function displayGamesTab() {
             };
 
             var addActionOverlay = document.createElement('div');
-		addActionOverlay.style = `
-		    position: absolute; 
-		    bottom: 0; 
-		    right: 0; 
-		    width: 100%; 
-		    height: 50%; 
-		    background-color: rgba(0, 255, 0, 0.5); 
-		    color: white; 
-		    display: flex; 
-		    justify-content: center; 
-		    align-items: center; 
-		    display: none;
-		    border-bottom-left-radius: 1rem; 
-		    border-bottom-right-radius: 1rem; 
-		    text-shadow: 2px 2px 4px #000000;
-		`;
-		
-		// Create an image element for the "Add/Remove" icon
-		var addActionImage = document.createElement('img');
-		addActionImage.src = './thumbUp.png'; // Path to the image
-		addActionImage.alt = 'Add/Remove';
-		addActionImage.style = `
-		    width: 90px; 
-		    height: 90px; 
-		`;
-		
-		// Append the image to the overlay
-		addActionOverlay.appendChild(addActionImage);
+            addActionOverlay.style = `
+                position: absolute; 
+                bottom: 0; 
+                right: 0; 
+                width: 100%; 
+                height: 50%; 
+                background-color: rgba(0, 255, 0, 0.5); 
+                color: white; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                display: none;
+                border-bottom-left-radius: 1rem; 
+                border-bottom-right-radius: 1rem; 
+                text-shadow: 2px 2px 4px #000000;
+            `;
+            
+            // Create an image element for the "Add/Remove" icon
+            var addActionImage = document.createElement('img');
+            addActionImage.src = './thumbUp.png'; // Path to the image
+            addActionImage.alt = 'Add/Remove';
+            addActionImage.style = `
+                width: 90px; 
+                height: 90px; 
+            `;
+            
+            // Append the image to the overlay
+            addActionOverlay.appendChild(addActionImage);
 
-		// Update the color of the image based on data-status
-		function updateThumbColor() {
-		    const status = resultDiv.dataset.status || "";
-		    const hasUsers = status.trim() !== ""; // Check if there are any users in data-status
-		    addActionImage.style.filter = hasUsers ? "none" : "grayscale(100%)"; // Gray if no users
-		}
-		
-		// Call updateThumbColor initially and on data-status changes
-		updateThumbColor();
+            // Update the color of the image based on data-status
+            function updateThumbColor() {
+                const status = resultDiv.dataset.status || "";
+                const hasUsers = status.trim() !== ""; // Check if there are any users in data-status
+                addActionImage.style.filter = hasUsers ? "none" : "grayscale(100%)"; // Gray if no users
+            }
+            
+            // Call updateThumbColor initially and on data-status changes
+            updateThumbColor();
 
-		var userCountIndicator = document.createElement('div');
-		userCountIndicator.style = `
-		    position: absolute; 
-		    top: 0px; 
-		    right: 0px; 
-		    width: 32px; 
-		    height: 32px; 
-		    border-radius: 16px; 
-		    background-color: rgba(0, 0, 0, 0.5); 
-		    color: white; 
-		    display: flex; 
-		    justify-content: center; 
-		    align-items: center; 
-		    font-weight: bold;
-		    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
-		`;
-		
-		// Append the indicator to the resultDiv
-		resultDiv.appendChild(userCountIndicator);
+            var userCountIndicator = document.createElement('div');
+            userCountIndicator.style = `
+                position: absolute; 
+                top: 0px; 
+                right: 0px; 
+                width: 32px; 
+                height: 32px; 
+                border-radius: 16px; 
+                background-color: rgba(0, 0, 0, 0.5); 
+                color: white; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                font-weight: bold;
+                box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);
+            `;
+            
+            // Append the indicator to the resultDiv
+            resultDiv.appendChild(userCountIndicator);
 
-		// Function to update the user count and the indicator's visibility
-		function updateUserCount() {
-		    const status = resultDiv.dataset.status || "";
-		    const statusArray = status ? status.split(",") : []; // Split users by commas
-		    userCountIndicator.textContent = statusArray.length; // Update the count
-		    userCountIndicator.style.display = statusArray.length > 0 ? "flex" : "none"; // Hide if no users
-		}
-		
-		// Initial update of the user count
-		updateUserCount();
-		
-		// Click handler for the overlay
-		addActionOverlay.onclick = function(event) {
-		    createGameClickHandler(game, resultDiv)();
-		    hideOverlays(websiteOverlay, addActionOverlay);
-		    updateThumbColor();
-		    updateUserCount();
-		    // Re-enable showing overlays on click
-		    resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
-		    event.stopPropagation(); // Prevent triggering clicks on underlying elements
-		};
-
+            // Function to update the user count and the indicator's visibility
+            function updateUserCount() {
+                const status = resultDiv.dataset.status || "";
+                const statusArray = status ? status.split(",") : []; // Split users by commas
+                userCountIndicator.textContent = statusArray.length; // Update the count
+                userCountIndicator.style.display = statusArray.length > 0 ? "flex" : "none"; // Hide if no users
+            }
+            
+            // Initial update of the user count
+            updateUserCount();
+            
+            // Click handler for the overlay
+            addActionOverlay.onclick = function(event) {
+                createGameClickHandler(game, resultDiv)();
+                hideOverlays(websiteOverlay, addActionOverlay);
+                updateThumbColor();
+                updateUserCount();
+                // Re-enable showing overlays on click
+                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+                event.stopPropagation(); // Prevent triggering clicks on underlying elements
+            };
 
             resultDiv.style.position = 'relative';
             resultDiv.appendChild(websiteOverlay);
@@ -750,25 +747,25 @@ function displayGamesTab() {
             rowDiv.appendChild(resultDiv);
         });
 
-	console.timeEnd("processAndBuildDOM");
+        console.timeEnd("processAndBuildDOM");
         hideLoadingOverlay();
 
         checkbox.addEventListener('change', function() {
-	    const allGameItems = document.querySelectorAll('.result-item');
-	    allGameItems.forEach(item => {
-	        // Check if data-status contains any text (indicating users)
-	        const hasUsers = item.dataset.status && item.dataset.status.trim() !== "";
-	
-	        // Apply display logic
-	        if (this.checked) {
-	            if (!hasUsers) {
-	                item.style.display = 'none'; // Hide games with no users
-	            }
-	        } else {
-	            item.style.display = ''; // Show all games
-	        }
-	    });
-	});
+            const allGameItems = document.querySelectorAll('.result-item');
+            allGameItems.forEach(item => {
+                // Check if data-status contains any text (indicating users)
+                const hasUsers = item.dataset.status && item.dataset.status.trim() !== "";
+        
+                // Apply display logic
+                if (this.checked) {
+                    if (!hasUsers) {
+                        item.style.display = 'none'; // Hide games with no users
+                    }
+                } else {
+                    item.style.display = ''; // Show all games
+                }
+            });
+        });
     });
 }
 
@@ -815,7 +812,7 @@ function searchLibrary(button) {
     document.getElementById('libraryResults').innerHTML = '';
 
     // Fetch the user's owned games from Firestore
-    fetchUserOwnedGamesByUID()
+    fetchUserGames()
         .then(gamesData => {
             const gamesDiv = document.getElementById('libraryResults');
             gamesDiv.innerHTML = ''; // Clear previous content
@@ -881,7 +878,7 @@ function createClickHandler(name, objectId, thumbnailImg, status, newGame, resul
         };
 
         // 1) Fetch the user’s Firestore games
-        fetchUserOwnedGamesByUID()
+        fetchUserGames()
             .then(existingGames => {
                 // 2) Check if the user already owns this game
                 const existingObjectIds = existingGames.map(g => g.objectId);
@@ -1019,31 +1016,59 @@ function updateGameInSheet(game, action) {
         console.error("Error updating game status:", error);
     });
 }
-
+  
 async function addGame(game) {
-  const userUID = auth.currentUser.uid;
-  const docRef = doc(db, "games", String(game.objectId));
+    const userUID = auth.currentUser.uid;
 
-  const docSnap = await getDoc(docRef);
+    // 1) Check if user already owns any game
+    const ownsGames = await userAlreadyOwnsGames(userUID);
 
-  if (!docSnap.exists()) {
-    // Create a brand new doc with this user as the sole owner
-    await setDoc(docRef, {
-      objectId: game.objectId,
-      name: game.name,
-      thumbnail: game.thumbnail,
-      newGame: game.newGame, // or "Y" if you want a default
-      status: game.status || "[]", 
-      owners: [userUID]  // store UID here
-    });
-    console.log(`Created new doc for game: ${game.name} (objectId: ${game.objectId})`);
-  } else {
-    // Doc exists; add user to owners if not already present
-    await updateDoc(docRef, {
-      owners: arrayUnion(userUID)
-    });
-    console.log(`Added UID ${userUID} to owners for game: ${game.name} (${game.objectId})`);
-  }
+    // 2) If not, prompt for library name and store in /users/{uid}
+    if (!ownsGames) {
+        const libraryName = prompt(
+        "What would you like others to see your library called?"
+        );
+        if (libraryName) {
+        // If user cancels prompt, libraryName could be null/empty
+        await setDoc(doc(db, "users", userUID), {
+            libraryName: libraryName
+            // You can store other user info if you like
+        }, { merge: true });
+        console.log(`Set libraryName = "${libraryName}" for UID ${userUID}`);
+        }
+    }
+
+    // 3) Proceed to create/update the game document
+    const docRef = doc(db, "games", String(game.objectId));
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+        // Create a brand new doc with this user as the sole owner
+        await setDoc(docRef, {
+        objectId: game.objectId,
+        name: game.name,
+        thumbnail: game.thumbnail,
+        newGame: game.newGame, // or "Y" if you want a default
+        status: game.status || "[]",
+        owners: [userUID] // store UID here
+        });
+        console.log(`Created new doc for game: ${game.name} (objectId: ${game.objectId})`);
+    } else {
+        // Doc exists; add user to owners if not already present
+        await updateDoc(docRef, {
+        owners: arrayUnion(userUID)
+        });
+        console.log(`Added UID ${userUID} to owners for game: ${game.name} (${game.objectId})`);
+    }
+}
+
+async function userAlreadyOwnsGames(userUID) {
+    // Query "games" collection for docs where owners array-contains userUID
+    const q = query(collection(db, "games"), where("owners", "array-contains", userUID));
+    const snapshot = await getDocs(q);
+
+    // If snapshot is empty => user does not own any games
+    return !snapshot.empty;
 }
 
 async function removeGame(objectId) {
@@ -1070,31 +1095,6 @@ async function removeGame(objectId) {
         console.log(`Deleted doc for objectId ${objectId}, as no owners remain.`);
     } else {
         console.log(`Removed UID ${userUID} from owners for objectId ${objectId}.`);
-    }
-}
-
-function handleLibraryChange() {
-    var libraryDropdown = document.getElementById('libraryDropdown');
-    var selectedValue = libraryDropdown.value;
-    document.getElementById('libraryResults').innerHTML = '';
-
-    if (selectedValue === 'newLibrary') {
-        if (!isLoggedIn()) return;
-        
-        var newLibraryName = prompt("Please enter a name for the new library:");
-        if (newLibraryName) {
-            // Add the new library to the dropdown
-            var newOption = document.createElement('option');
-            newOption.value = newLibraryName.toLowerCase();
-            newOption.textContent = newLibraryName.charAt(0).toUpperCase() + newLibraryName.slice(1);
-            libraryDropdown.add(newOption, libraryDropdown.options[libraryDropdown.options.length - 1]);
-
-            // Select the newly added library
-            libraryDropdown.value = newLibraryName.toLowerCase();
-        } else {
-            // Reset the selection if the user cancels or enters no name
-            libraryDropdown.value = '';
-        }
     }
 }
 
