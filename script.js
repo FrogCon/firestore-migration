@@ -489,7 +489,12 @@ function displaySearchResults(data, button) {
 
 function displayGamesTab() {
     showLoadingOverlay();
+
+    console.time("fetchAllGames");
     fetchAllGames().then(gamesData => {
+	console.timeEnd("fetchAllGames");
+
+	console.time("processAndBuildDOM");
         const user = auth.currentUser ? auth.currentUser : { email: "nouser@email.com" };
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
@@ -715,6 +720,7 @@ function displayGamesTab() {
             rowDiv.appendChild(resultDiv);
         });
 
+	console.timeEnd("processAndBuildDOM");
         hideLoadingOverlay();
 
         checkbox.addEventListener('change', function() {
