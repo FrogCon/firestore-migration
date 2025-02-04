@@ -81,8 +81,6 @@ onAuthStateChanged(auth, (user) => {
     // Call the appropriate function for the active tab
     if (activeTab === "Games") {
         displayGamesTab();
-    } else if (activeTab === "ModifyGames") {
-        populateLibraryDropdown();
     }
 });
 
@@ -247,7 +245,6 @@ function openTab(evt, tabName) {
     }
 
     if (tabName === 'ModifyGames') {
-        populateLibraryDropdown();
         document.getElementById('bggUsername').value = '';
         document.getElementById('searchResults').innerHTML = '';
         document.getElementById('bggSearchQuery').value = '';
@@ -1074,74 +1071,6 @@ async function removeGame(objectId) {
     } else {
         console.log(`Removed UID ${userUID} from owners for objectId ${objectId}.`);
     }
-}
-
-function populateLibraryDropdown() {
-    const libraryDropdown = document.getElementById('libraryDropdown');
-    libraryDropdown.length = 1; // Clear all options except the default one
-    libraryDropdown.selectedIndex = 0;
-
-    const user = auth.currentUser;
-    if (!user) {
-        // User is not logged in; show a message
-        const option = document.createElement('option');
-        option.value = "";
-        option.textContent = "Please login to use this feature...";
-        option.disabled = true;
-        libraryDropdown.appendChild(option);
-        hideLoadingOverlay();
-        return;
-    }
-
-    showLoadingOverlay();
-
-    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?type=sheetNames&email=${user.email}`;
-    fetch(url, {
-        method: "GET",
-        redirect: "follow", // Ensure redirects are followed
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8", // Avoid preflight
-        },
-    })
-        .then(response => response.text()) // Read response as text
-        .then(text => {
-            const sheetNames = JSON.parse(text); // Parse JSON manually
-            if (sheetNames.error) {
-                alert(sheetNames.error);
-                hideLoadingOverlay();
-                return;
-            }
-
-            // Keep the "Add New Library" option
-            const addLibraryOption = document.createElement('option');
-            addLibraryOption.value = "newLibrary";
-            addLibraryOption.textContent = "Add New Library";
-
-            libraryDropdown.length = 1; // Reset dropdown
-            libraryDropdown.selectedIndex = 0;
-
-            // Add valid sheet names, filtering out invalid options
-            sheetNames
-                .filter(name => name.trim() !== "") // Exclude empty names
-                .filter(name => name.toLowerCase() !== "librarymetadata") // Exclude LibraryMetadata
-                .sort((a, b) => a.localeCompare(b)) // Sort names alphabetically
-                .forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name.toLowerCase();
-                    option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-                    libraryDropdown.appendChild(option);
-                });
-
-            // Add the "Add New Library" option to the dropdown
-            libraryDropdown.appendChild(addLibraryOption);
-
-            hideLoadingOverlay();
-        })
-        .catch(error => {
-            console.error("Error fetching sheet names:", error);
-            alert("An error occurred while fetching library options.");
-            hideLoadingOverlay();
-        });
 }
 
 function handleLibraryChange() {
