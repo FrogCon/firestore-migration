@@ -317,6 +317,7 @@ function getCollection() {
 
 function prepareData(data) {
     const statusDiv = document.getElementById('statusMessage');
+    const userUID = auth.currentUser.uid;
   
     // 1) Build extractedData from BGG XML
     const extractedData = [];
