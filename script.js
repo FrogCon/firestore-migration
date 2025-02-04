@@ -278,11 +278,9 @@ function getCollection() {
     if (!isLoggedIn()) return;
     
     var username = document.getElementById('bggUsername').value;
-    var libraryDropdown = document.getElementById('libraryDropdown');
-    var selectedLibrary = libraryDropdown.value;
     var statusDiv = document.getElementById('statusMessage');
     
-    if (username && selectedLibrary && selectedLibrary !== 'newLibrary') {
+    if (username) {
         statusDiv.innerHTML = 'Fetching Collection...';
         fetch(`https://boardgamegeek.com/xmlapi2/collection?username=${encodeURIComponent(username)}&own=1&version=1`)
             .then(response => {
@@ -316,9 +314,6 @@ function getCollection() {
     } else {
         if (!username) {
             alert ('Please Enter A Username.');
-            statusDiv.innerHTML = '';
-        } else {
-            alert ('Please Choose A Library First.');
             statusDiv.innerHTML = '';
         }
     }
@@ -471,21 +466,14 @@ function fetchGameDetails(gameId) {
 
 function searchGames(button) {
     if (!isLoggedIn()) return;
-    
-    var libraryDropdown = document.getElementById('libraryDropdown');
-    var selectedLibrary = libraryDropdown.value;
 
-    if (selectedLibrary && selectedLibrary !== 'newLibrary') {
-        var query = document.getElementById('bggSearchQuery').value;
-        var searchUrl = `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}&type=boardgame`;
+    var query = document.getElementById('bggSearchQuery').value;
+    var searchUrl = `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}&type=boardgame`;
 
-        fetch(searchUrl)
-            .then(response => response.text())
-            .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
-            .then(data => displaySearchResults(data, button));
-    } else {
-        alert ('Please select a library first.');
-    }
+    fetch(searchUrl)
+        .then(response => response.text())
+        .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
+        .then(data => displaySearchResults(data, button));
 }
 
 function displaySearchResults(data, button) {
