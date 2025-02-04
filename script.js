@@ -17,7 +17,7 @@ let activeTab = "Home";
 
 // Import Firebase modules
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+import { getFirestore, doc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
 // Get references to Firebase services
 const auth = getAuth(); // Uses the app initialized in index.html
@@ -325,59 +325,132 @@ function getCollection() {
 }
 
 function prepareData(data) {
-    var extractedData = [];
-    var items = data.getElementsByTagName('item');
-    var statusDiv = document.getElementById('statusMessage');
-
-    for (var i = 0; i < items.length; i++) {
-        var name = items[i].getElementsByTagName('name')[0].textContent;
-        var objectId = items[i].getAttribute('objectid');
-        var objectIdNum = Number(objectId); // Convert objectId to a number
-
-        // Check if the thumbnail element exists
-        var thumbnailElements = items[i].getElementsByTagName('thumbnail');
-        var thumbnail = '';
-        if (thumbnailElements.length > 0) {
-            thumbnail = thumbnailElements[0].textContent;
-        } else {
-            // Set a default thumbnail or handle the absence of a thumbnail
-            thumbnail = './no-image.png';
+    const statusDiv = document.getElementById('statusMessage');
+  
+    // 1) Build extractedData from BGG XML
+    const extractedData = [];
+    const items = data.getElementsByTagName('item');
+  
+    for (let i = 0; i < items.length; i++) {
+      const name = items[i].getElementsByTagName('name')[0].textContent;
+      const objectId = items[i].getAttribute('objectid');
+      const objectIdNum = Number(objectId); // Convert to number
+  
+      // Check thumbnail
+      const thumbnailElements = items[i].getElementsByTagName('thumbnail');
+      let thumbnail = './no-image.png';
+      if (thumbnailElements.length > 0) {
+        thumbnail = thumbnailElements[0].textContent;
+      }
+  
+      const status = '[]';   // legacy field
+      const newGame = 'Y';   // legacy field
+  
+      extractedData.push({ 
+        name, 
+        objectId: objectIdNum, 
+        thumbnail, 
+        status, 
+        newGame 
+      });
+    }
+  
+    // Show first 10 as a preview
+    const firstSet = extractedData
+      .slice(0, 10)
+      .map(game => game.name)
+      .join('\n');
+  
+    const confirmation = confirm(
+      `Here are the first 10 games from this collection:\n\n${firstSet}\n\nDoes this look correct?`
+    );
+  
+    // 2) If user does NOT confirm, we stop
+    if (!confirmation) {
+      statusDiv.innerHTML = '';
+      return;
+    }
+  
+    // 3) If user confirms, fetch the user-owned games from Firestore
+    statusDiv.innerHTML = 'Updating Database...';
+  
+    fetchUserOwnedGamesFromFirestore().then(existingGames => {
+      // existingGames is an array of docs (the user’s ownership) with fields
+      // [ name, objectId, thumbnail, status, newGame, owners ]
+  
+      // 4) figure out which docs to remove from the user’s ownership:
+      //    these are docs in Firestore but not in the new BGG extracted data
+      const newObjectIds = extractedData.map(g => g.objectId);
+  
+      const gamesToRemove = existingGames.filter(g => 
+        !newObjectIds.includes(g.objectId)
+      );
+  
+      // 4a) Prompt user and remove each
+      gamesToRemove.forEach(game => {
+        const removeConfirm = confirm(
+          `Remove "${game.name}" from your ownership? (objectId ${game.objectId})`
+        );
+        if (removeConfirm) {
+          removeUserFromOwners(game.objectId);
         }
-
-        var status = '[]';
-	var newGame = 'Y';
-        extractedData.push({ name, objectId: objectIdNum, thumbnail, status, newGame });
-    }
-
-    // Display an alert with the first 10 names and ask for confirmation
-    var firstSet = extractedData.slice(0, 10).map(game => game.name).join('\n');
-    var confirmation = confirm(`Here are the first 10 games from this collection:\n\n${firstSet}\n\nDoes this look correct?`);
-
-    if (confirmation) {
-        fetchExistingGames().then(gamesDataFromSheet => {
-            var objectIdsInXML = extractedData.map(game => game.objectId);
-            var gamesToRemove = gamesDataFromSheet.filter(game => !objectIdsInXML.includes(game.objectId));
-
-            gamesToRemove.forEach(game => {
-                if (confirm(`Remove "${game.name}" from the sheet?`)) {
-                    // Send removal request to Google Apps Script
-                    removeFromGoogleSheet(game.objectId);
-                }
-            });
-
-            var uniqueGames = extractedData.filter(game => !gamesDataFromSheet.map(g => g.objectId).includes(game.objectId));
-            if (uniqueGames.length > 0) {
-                sendToGoogleSheet({ games: uniqueGames });
-                alert (`${uniqueGames.length} new game(s) added.`);
-                statusDiv.innerHTML = '';
-            } else {
-                alert ('No new games to add.');
-                statusDiv.innerHTML = '';
-            }
-        });
-    } else {
+      });
+  
+      // 5) figure out which new games to add for the user
+      //    these are in the new extracted data but not found in the user’s existingGames
+      const existingObjectIds = existingGames.map(g => g.objectId);
+  
+      const uniqueGames = extractedData.filter(g => 
+        !existingObjectIds.includes(g.objectId)
+      );
+  
+      if (uniqueGames.length > 0) {
+        // For each unique game, add or update in Firestore
+        const addPromises = uniqueGames.map(game => addGameToFirestore(game));
+  
+        Promise.all(addPromises)
+          .then(() => {
+            alert(`${uniqueGames.length} new game(s) added to your ownership.`);
+            statusDiv.innerHTML = '';
+          })
+          .catch(error => {
+            console.error('Error adding games:', error);
+            alert('Failed to add some games. Check console for details.');
+            statusDiv.innerHTML = '';
+          });
+      } else {
+        alert('No new games to add.');
         statusDiv.innerHTML = '';
-    }
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user-owned games:', error);
+      alert('An error occurred while fetching your games. Please try again.');
+      statusDiv.innerHTML = '';
+    });
+  }  
+
+async function fetchUserOwnedGamesFromFirestore() {
+    const userEmail = auth.currentUser.email;
+    const q = query(collection(db, "games"), where("owners", "array-contains", userEmail));
+    const snapshot = await getDocs(q);
+
+    const gamesArray = [];
+    snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        // We can store the Firestore doc ID if needed, but we assume `objectId` is unique
+        gamesArray.push({
+        // The doc might have objectId, name, etc.:
+        name: data.name,
+        objectId: data.objectId,
+        thumbnail: data.thumbnail,
+        status: data.status,   // If you’re still using “status”
+        newGame: data.newGame, // If you’re still using “newGame”
+        owners: data.owners,   // We’ll keep track of owners
+        });
+    });
+
+    return gamesArray;
 }
 
 function fetchExistingGames() {
@@ -971,6 +1044,33 @@ function updateGameInSheet(game, action) {
     });
 }
 
+async function addGameToFirestore(game) {
+    const userEmail = auth.currentUser.email;
+    // If your docId matches the BGG `objectId`, we can do:
+    const docRef = doc(db, "games", String(game.objectId));
+
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+        // Create a brand new doc
+        await setDoc(docRef, {
+        objectId: game.objectId,
+        name: game.name,
+        thumbnail: game.thumbnail,
+        newGame: "Y", // or game.newGame if you want to keep that
+        status: "[]", // if you still need a status field
+        owners: [userEmail] // user is the sole owner
+        });
+        console.log(`Created new doc for game: ${game.name} (${game.objectId})`);
+    } else {
+        // Doc exists. Add the user to owners array if they're not already in
+        await updateDoc(docRef, {
+        owners: arrayUnion(userEmail)
+        });
+        console.log(`Added ${userEmail} to owners for game: ${game.name} (${game.objectId})`);
+    }
+}  
+
 function sendToGoogleSheet(data) {
     var selectedLibrary = document.getElementById('libraryDropdown').value;
     const user = auth.currentUser;
@@ -986,6 +1086,39 @@ function sendToGoogleSheet(data) {
     .then(response => console.log('Data sent to Google Sheets'))
     .catch(error => console.error('Error:', error));
 }
+
+async function removeUserFromOwners(objectId) {
+    const userEmail = auth.currentUser.email;
+    
+    // First, find the doc by objectId. We assume each doc is keyed by `objectId`.
+    // If your docs are stored with the Firestore docId == objectId, we can do:
+    const docRef = doc(db, "games", String(objectId));
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+    console.warn(`Doc for objectId ${objectId} does not exist.`);
+    return;
+    }
+
+    const owners = docSnap.data().owners || [];
+    // Remove user from owners
+    await updateDoc(docRef, {
+    owners: arrayRemove(userEmail)
+    });
+
+    // Check if it’s now empty
+    const updatedSnap = await getDoc(docRef);
+    const updatedOwners = updatedSnap.data().owners || [];
+    
+    if (updatedOwners.length === 0) {
+    // Optional: delete the doc entirely
+    // If you do not want to delete it, remove this step
+    await deleteDoc(docRef);
+    console.log(`Deleted doc for objectId ${objectId} because no owners remain.`);
+    } else {
+    console.log(`Removed ${userEmail} from owners for objectId ${objectId}.`);
+    }
+}  
 
 function removeFromGoogleSheet(objectId) {
     var selectedLibrary = document.getElementById('libraryDropdown').value;
