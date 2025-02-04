@@ -358,51 +358,60 @@ function prepareData(data) {
     // 2) If confirmed, fetch user's Firestore games (via UID)
     statusDiv.innerHTML = 'Updating Database...';
   
-    fetchUserGames()
-      .then(existingGames => {
+    fetchUserGames().then(async (existingGames) => {
         // existingGames: array of { name, objectId, thumbnail, owners, ... }
-  
+        
+        // If user has zero existing games, prompt once for library name
+        if (existingGames.length === 0) {
+            const libraryName = prompt(
+            "This is your first game! What would you like others to see your library called?"
+            );
+            if (libraryName) {
+                await setDoc(doc(db, "users", userUID), { libraryName }, { merge: true });
+            }
+        }
+
         // 3) Remove user ownership for any existing games not in new extractedData
         const newObjectIds = extractedData.map(g => g.objectId);
         const gamesToRemove = existingGames.filter(g =>
-          !newObjectIds.includes(g.objectId)
+            !newObjectIds.includes(g.objectId)
         );
-  
+
         gamesToRemove.forEach(game => {
-          if (confirm(`Remove "${game.name}" from your ownership?`)) {
+            if (confirm(`Remove "${game.name}" from your ownership?`)) {
             removeGame(game.objectId);
-          }
+            }
         });
-  
+
         // 4) Add new games from extractedData that user doesn't already own
         const existingObjectIds = existingGames.map(g => g.objectId);
         const uniqueGames = extractedData.filter(g =>
-          !existingObjectIds.includes(g.objectId)
+            !existingObjectIds.includes(g.objectId)
         );
-  
+
         if (uniqueGames.length > 0) {
-          const addPromises = uniqueGames.map(g => addGame(g));
-          Promise.all(addPromises)
+            const addPromises = uniqueGames.map(g => addGame(g));
+            Promise.all(addPromises)
             .then(() => {
-              alert(`${uniqueGames.length} new game(s) added to your ownership.`);
-              statusDiv.innerHTML = '';
+                alert(`${uniqueGames.length} new game(s) added to your ownership.`);
+                statusDiv.innerHTML = '';
             })
             .catch(error => {
-              console.error('Error adding games:', error);
-              alert('Failed to add some games. See console for details.');
-              statusDiv.innerHTML = '';
+                console.error('Error adding games:', error);
+                alert('Failed to add some games. See console for details.');
+                statusDiv.innerHTML = '';
             });
         } else {
-          alert('No new games to add.');
-          statusDiv.innerHTML = '';
+            alert('No new games to add.');
+            statusDiv.innerHTML = '';
         }
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('Error fetching user-owned games:', error);
         alert('An error occurred while fetching your games. Please try again.');
         statusDiv.innerHTML = '';
-      });
-  }
+    });
+}
   
 
 async function fetchUserGames() {
@@ -1017,50 +1026,31 @@ function updateGameInSheet(game, action) {
     });
 }
   
+// Simplified: no "first-time" check in here
 async function addGame(game) {
     const userUID = auth.currentUser.uid;
-
-    // 1) Check if user already owns any game
-    const ownsGames = await userAlreadyOwnsGames(userUID);
-
-    // 2) If not, prompt for library name and store in /users/{uid}
-    if (!ownsGames) {
-        const libraryName = prompt(
-        "What would you like others to see your library called?"
-        );
-        if (libraryName) {
-        // If user cancels prompt, libraryName could be null/empty
-        await setDoc(doc(db, "users", userUID), {
-            libraryName: libraryName
-            // You can store other user info if you like
-        }, { merge: true });
-        console.log(`Set libraryName = "${libraryName}" for UID ${userUID}`);
-        }
-    }
-
-    // 3) Proceed to create/update the game document
     const docRef = doc(db, "games", String(game.objectId));
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-        // Create a brand new doc with this user as the sole owner
+        // create brand new doc
         await setDoc(docRef, {
         objectId: game.objectId,
         name: game.name,
         thumbnail: game.thumbnail,
-        newGame: game.newGame, // or "Y" if you want a default
+        newGame: game.newGame,
         status: game.status || "[]",
-        owners: [userUID] // store UID here
+        owners: [userUID]
         });
-        console.log(`Created new doc for game: ${game.name} (objectId: ${game.objectId})`);
+        console.log(`Created new doc: ${game.name} (${game.objectId})`);
     } else {
-        // Doc exists; add user to owners if not already present
+        // doc exists, arrayUnion user to owners
         await updateDoc(docRef, {
         owners: arrayUnion(userUID)
         });
-        console.log(`Added UID ${userUID} to owners for game: ${game.name} (${game.objectId})`);
+        console.log(`Added owner ${userUID} to: ${game.name} (${game.objectId})`);
     }
-}
+}  
 
 async function userAlreadyOwnsGames(userUID) {
     // Query "games" collection for docs where owners array-contains userUID
