@@ -379,7 +379,7 @@ function prepareData(data) {
   
         gamesToRemove.forEach(game => {
           if (confirm(`Remove "${game.name}" from your ownership?`)) {
-            removeUserFromOwnersByUID(game.objectId);
+            removeGame(game.objectId);
           }
         });
   
@@ -390,7 +390,7 @@ function prepareData(data) {
         );
   
         if (uniqueGames.length > 0) {
-          const addPromises = uniqueGames.map(g => addGameToFirestoreByUID(g));
+          const addPromises = uniqueGames.map(g => addGame(g));
           Promise.all(addPromises)
             .then(() => {
               alert(`${uniqueGames.length} new game(s) added to your ownership.`);
@@ -433,16 +433,6 @@ async function fetchUserOwnedGamesByUID() {
     });
 
     return gamesArray;
-}
-
-function fetchExistingGames() {
-    var selectedLibrary = document.getElementById('libraryDropdown').value;
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
-
-    return fetch(url)
-        .then(response => response.json())
-        .then(existingObjectIds => existingObjectIds)
-        .catch(error => console.error('Error:', error));
 }
 
 function fetchAllGames() {
@@ -528,7 +518,7 @@ function displaySearchResults(data, button) {
         resultDiv.appendChild(nameDiv);
 
         var status = '[]';
-	var newGame = 'Y';
+	    var newGame = 'Y';
 
         // Setup click event
         resultDiv.onclick = createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv);
@@ -836,59 +826,55 @@ function hideCurrentActiveOverlays() {
 function searchLibrary(button) {
     if (!isLoggedIn()) return;
 
-    var libraryDropdown = document.getElementById('libraryDropdown');
-    var selectedLibrary = libraryDropdown.value;
+    showLoadingOverlay(); // Show the overlay before starting the fetch
+    document.getElementById('libraryResults').innerHTML = '';
 
-    if (selectedLibrary && selectedLibrary !== 'newLibrary') {
-        showLoadingOverlay(); // Show the overlay before starting the fetch
-        document.getElementById('libraryResults').innerHTML = '';
+    // Fetch the user's owned games from Firestore
+    fetchUserOwnedGamesByUID()
+        .then(gamesData => {
+            const gamesDiv = document.getElementById('libraryResults');
+            gamesDiv.innerHTML = ''; // Clear previous content
 
-        fetchExistingGames()
-            .then(gamesData => {
-                var gamesDiv = document.getElementById('libraryResults');
-                gamesDiv.innerHTML = ''; // Clear previous content and add title
+            // Sort the gamesData alphabetically
+            const sortedGames = gamesData.sort((a, b) => a.name.localeCompare(b.name));
 
-                // Sort the gamesData alphabetically
-                var sortedGames = gamesData.sort((a, b) => a.name.localeCompare(b.name));
+            // Create a row container for the results
+            const currentRow = document.createElement('div');
+            currentRow.className = 'result-row';
+            gamesDiv.appendChild(currentRow);
 
-                var currentRow;
-                currentRow = document.createElement('div');
-                currentRow.className = 'result-row';
-                gamesDiv.appendChild(currentRow);
+            // Render each game
+            sortedGames.forEach((game) => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-item';
 
-                sortedGames.forEach((game) => {
-                    var resultDiv = document.createElement('div');
-                    resultDiv.className = 'result-item';
-        
-                    var thumbnailImg = document.createElement('img');
-                    thumbnailImg.src = game.thumbnail; // Assuming thumbnail URL is available
-                    thumbnailImg.alt = game.name;
-                    thumbnailImg.className = 'thumbnail-img';
+                const thumbnailImg = document.createElement('img');
+                thumbnailImg.src = game.thumbnail || './no-image.png';
+                thumbnailImg.alt = game.name;
+                thumbnailImg.className = 'thumbnail-img';
 
-                    var nameDiv = document.createElement('div');
-                    nameDiv.innerHTML = game.name;
-                    nameDiv.className = 'game-name';
+                const nameDiv = document.createElement('div');
+                nameDiv.textContent = game.name;
+                nameDiv.className = 'game-name';
 
-                    resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
+                // Attach the remove user-ownership click handler
+                resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
 
-                    resultDiv.appendChild(thumbnailImg);
-                    resultDiv.appendChild(nameDiv);
+                resultDiv.appendChild(thumbnailImg);
+                resultDiv.appendChild(nameDiv);
 
-                    currentRow.appendChild(resultDiv);
-                });
-
-                hideLoadingOverlay(); // Hide the overlay once loading is complete
-            })
-            .catch(error => {
-                alert('An error occurred while loading the library. Please try again.');
-                console.error(error);
-                hideLoadingOverlay(); // Ensure overlay is hidden on error
+                currentRow.appendChild(resultDiv);
             });
 
-        button.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        alert('Select A Library First');
-    }
+            hideLoadingOverlay(); // Hide the overlay once loading is complete
+        })
+        .catch(error => {
+            alert('An error occurred while loading your library. Please try again.');
+            console.error(error);
+            hideLoadingOverlay(); // Ensure overlay is hidden on error
+        });
+
+    button.scrollIntoView({ behavior: 'smooth' });
 }
 
 function toggleOwnerGames(ownerDiv) {
@@ -898,22 +884,45 @@ function toggleOwnerGames(ownerDiv) {
 
 function createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv) {
     if (!isLoggedIn()) return;
-    
-    return function() {
-        var extractedData = [{ name, objectId: Number(objectId), thumbnail: thumbnailImg.src, status, newGame }];
-        
-        fetchExistingGames().then(gamesDataFromSheet => {
-            var uniqueGames = extractedData.filter(game => !gamesDataFromSheet.map(g => g.objectId).includes(game.objectId));
-            if (uniqueGames.length > 0) {
-                sendToGoogleSheet({ games: uniqueGames });
-            } else {
-                alert ('Game Was Already In Library');
-            }
-        });
 
-        // Update the background color
-        resultDiv.style.backgroundColor = 'green';
-        resultDiv.style.animation = 'spin-grow 1s linear forwards';
+    return function() {
+        // Create a single game object from the clicked item
+        const singleGame = {
+            name: name,
+            objectId: Number(objectId),
+            thumbnail: thumbnailImg.src,
+            status: status,
+            newGame: newGame
+        };
+
+        // 1) Fetch the user’s Firestore games
+        fetchUserOwnedGamesByUID()
+            .then(existingGames => {
+                // 2) Check if the user already owns this game
+                const existingObjectIds = existingGames.map(g => g.objectId);
+                if (!existingObjectIds.includes(singleGame.objectId)) {
+                    // 3) Not in the user’s library, so add it
+                    addGame(singleGame)
+                        .then(() => {
+                            console.log("Game added to Firestore:", singleGame.name);
+                        })
+                        .catch(err => {
+                            console.error("Error adding game to Firestore:", err);
+                            alert("An error occurred while adding the game.");
+                        });
+                } else {
+                    // Already owned
+                    alert("Game Was Already In Library");
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching user-owned games:", err);
+                alert("Could not check existing games. Please try again later.");
+            });
+
+        // 4) Update the background color and apply an animation
+        resultDiv.style.backgroundColor = "green";
+        resultDiv.style.animation = "spin-grow 1s linear forwards";
     };
 }
 
@@ -921,7 +930,7 @@ function createRemoveClickHandler(game, resultDiv) {
     if (!isLoggedIn()) return;
     
     return function() {
-        removeFromGoogleSheet(game.objectId);
+        removeGame(game.objectId);
 
         // Apply CSS animation
         resultDiv.style.backgroundColor = 'red';
@@ -1026,7 +1035,7 @@ function updateGameInSheet(game, action) {
     });
 }
 
-async function addGameToFirestoreByUID(game) {
+async function addGame(game) {
   const userUID = auth.currentUser.uid;
   const docRef = doc(db, "games", String(game.objectId));
 
@@ -1052,23 +1061,7 @@ async function addGameToFirestoreByUID(game) {
   }
 }
 
-function sendToGoogleSheet(data) {
-    var selectedLibrary = document.getElementById('libraryDropdown').value;
-    const user = auth.currentUser;
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}&email=${user.email}`;
-    fetch(url, {
-        method: 'POST',
-        mode: 'no-cors', // As Google Apps Script does not support CORS
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    })
-    .then(response => console.log('Data sent to Google Sheets'))
-    .catch(error => console.error('Error:', error));
-}
-
-async function removeUserFromOwnersByUID(objectId) {
+async function removeGame(objectId) {
     const userUID = auth.currentUser.uid;
     const docRef = doc(db, "games", String(objectId));
     const docSnap = await getDoc(docRef);
@@ -1093,26 +1086,6 @@ async function removeUserFromOwnersByUID(objectId) {
     } else {
         console.log(`Removed UID ${userUID} from owners for objectId ${objectId}.`);
     }
-}
-
-function removeFromGoogleSheet(objectId) {
-    var selectedLibrary = document.getElementById('libraryDropdown').value;
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
-    const payload = {
-        action: 'remove',
-        objectId: objectId
-    };
-
-    fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => console.log('Row removed'))
-    .catch(error => console.error('Error:', error));
 }
 
 function populateLibraryDropdown() {
