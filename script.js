@@ -877,46 +877,53 @@ function toggleOwnerGames(ownerDiv) {
 function createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv) {
     if (!isLoggedIn()) return;
 
-    return function() {
-        // Create a single game object from the clicked item
+    return async function() {
+        try {
+        // Construct the single game object
         const singleGame = {
-            name: name,
+            name,
             objectId: Number(objectId),
             thumbnail: thumbnailImg.src,
-            status: status,
-            newGame: newGame
+            status,
+            newGame
         };
 
-        // 1) Fetch the user’s Firestore games
-        fetchUserGames()
-            .then(existingGames => {
-                // 2) Check if the user already owns this game
-                const existingObjectIds = existingGames.map(g => g.objectId);
-                if (!existingObjectIds.includes(singleGame.objectId)) {
-                    // 3) Not in the user’s library, so add it
-                    addGame(singleGame)
-                        .then(() => {
-                            console.log("Game added to Firestore:", singleGame.name);
-                        })
-                        .catch(err => {
-                            console.error("Error adding game to Firestore:", err);
-                            alert("An error occurred while adding the game.");
-                        });
-                } else {
-                    // Already owned
-                    alert("Game Was Already In Library");
-                }
-            })
-            .catch(err => {
-                console.error("Error fetching user-owned games:", err);
-                alert("Could not check existing games. Please try again later.");
-            });
+        // 1) Fetch the user's games
+        const existingGames = await fetchUserGames();
 
-        // 4) Update the background color and apply an animation
+        // 2) If the user owns no games, prompt for a library name once
+        if (existingGames.length === 0) {
+            const libraryName = prompt(
+            "This is your first game! What would you like others to see your library called?"
+            );
+            if (libraryName) {
+            const userUID = auth.currentUser.uid;
+            await setDoc(doc(db, "users", userUID), { libraryName }, { merge: true });
+            console.log(`Library name set to "${libraryName}" for UID ${userUID}`);
+            }
+        }
+
+        // 3) Check if user already owns this specific game
+        const existingObjectIds = existingGames.map(g => g.objectId);
+        if (!existingObjectIds.includes(singleGame.objectId)) {
+            // Not owned: add the game
+            await addGame(singleGame);
+            console.log("Game added to Firestore:", singleGame.name);
+        } else {
+            // Already owned
+            alert("Game Was Already In Library");
+        }
+
+        // 4) Update the background color/animation
         resultDiv.style.backgroundColor = "green";
         resultDiv.style.animation = "spin-grow 1s linear forwards";
+
+        } catch (err) {
+        console.error("Error in createClickHandler:", err);
+        alert("Could not add or check this game. Please try again later.");
+        }
     };
-}
+}  
 
 function createRemoveClickHandler(game, resultDiv) {
     if (!isLoggedIn()) return;
