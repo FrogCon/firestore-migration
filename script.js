@@ -334,8 +334,8 @@ function prepareData(data) {
         thumbnail = thumbnailElements[0].textContent;
       }
   
-      const status = '[]'; // if needed
-      const newGame = 'Y'; // if needed
+      const status = [];
+      const newGame = 'Y';
   
       extractedData.push({
         name,
@@ -427,8 +427,8 @@ async function fetchUserGames() {
             name: data.name,
             objectId: data.objectId,
             thumbnail: data.thumbnail,
-            status: data.status,   // if you still use "status"
-            newGame: data.newGame, // if you still use "newGame"
+            status: data.status,
+            newGame: data.newGame,
             owners: data.owners    // array of UIDs
         });
     });
@@ -471,15 +471,15 @@ async function fetchAllGames() {
     allGameDocs.forEach(gameDoc => {
         const ownersArray = gameDoc.owners || [];
         ownersArray.forEach(uid => {
-        // Build a single object with the shape your display code expects
-        output.push({
-            owner: userMap[uid],          // e.g. "Alice's Library"
-            name: gameDoc.name,
-            objectId: gameDoc.objectId,
-            thumbnail: gameDoc.thumbnail,
-            newGame: gameDoc.newGame || "",
-            status: gameDoc.status || "[]"
-        });
+            // Build a single object with the shape your display code expects
+            output.push({
+                owner: userMap[uid],          // e.g. "Alice's Library"
+                name: gameDoc.name,
+                objectId: gameDoc.objectId,
+                thumbnail: gameDoc.thumbnail,
+                newGame: gameDoc.newGame || "",
+                status: Array.isArray(gameDoc.status) ? gameDoc.status : []
+            });
         });
     });
 
@@ -551,7 +551,7 @@ function displaySearchResults(data, button) {
         resultDiv.appendChild(thumbnailImg);
         resultDiv.appendChild(nameDiv);
 
-        var status = '[]';
+        var status = [];
 	    var newGame = 'Y';
 
         // Setup click event
@@ -569,12 +569,9 @@ function displaySearchResults(data, button) {
 async function displayGamesTab() {
     showLoadingOverlay();
 
-    console.time("fetchAllGames");
     try {
         const gamesData = await fetchAllGames();
-        console.timeEnd("fetchAllGames");
-
-        const user = auth.currentUser || { email: "" };
+        const userUID = auth.currentUser ? auth.currentUser.uid : null;
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
 
@@ -641,21 +638,17 @@ async function displayGamesTab() {
             var resultDiv = document.createElement('div');
             resultDiv.className = 'result-item';
             
-            let statusArray = [];
-            try {
-                statusArray = JSON.parse(game.status || "[]");
-            } catch (error) {
-                console.error("Error parsing status for game:", game.name, error);
-            }
+            let statusArray = Array.isArray(game.status) ? game.status : [];
 
-            // Set background color based on the parsed status
-            if (statusArray.includes(user.email)) {
+            // Set background color based on whether the user’s UID is in `statusArray`
+            if (userUID && statusArray.includes(userUID)) {
                 resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
             } else if (statusArray.length > 0) {
                 resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
             } else {
                 resultDiv.style.backgroundColor = ""; // Default background
             }
+
 
             resultDiv.dataset.status = statusArray;
 
@@ -984,62 +977,54 @@ function createRemoveClickHandler(game, resultDiv) {
 }
 
 function createGameClickHandler(game, resultDiv) {
-    // Return an async function so we can use await
-    return async function () {
-        if (!isLoggedIn() || game.animating) return; // Prevent handling clicks if animation is ongoing
+    return async function() {
+        if (!isLoggedIn() || game.animating) return; // Prevent multiple clicks
+        game.animating = true;
 
-        const userUID = auth.currentUser.uid;  // Use UID, not email
-        game.animating = true;                // Flag to avoid double clicks
+        const userUID = auth.currentUser.uid;
 
-        // Parse the game.status array (which stores UIDs)
-        let statusArray = [];
-        try {
-        statusArray = JSON.parse(game.status || "[]");
-        } catch (error) {
-        console.error("Error parsing game status:", error);
-        }
+        // 1) Ensure game.status is an array (fallback to empty if missing or invalid)
+        let statusArray = Array.isArray(game.status) ? [...game.status] : [];
 
-        let action = "remove";
-        // Toggle the current user's UID in the local status array
+        // 2) Determine whether we are adding or removing the current user
+        let action;
         if (statusArray.includes(userUID)) {
-        // Remove the UID if already in the array
+        // Remove user from status
         statusArray = statusArray.filter(uid => uid !== userUID);
         action = "remove";
         } else {
-        // Add the UID if not already in the array
+        // Add user to status
         statusArray.push(userUID);
         action = "add";
         }
 
-        // Update the game.status to the updated array as a JSON string
-        game.status = JSON.stringify(statusArray);
-        resultDiv.dataset.status = statusArray;
+        // 3) Update the game object in memory for immediate UI feedback
+        //    (So subsequent clicks see the updated array.)
+        game.status = statusArray;
 
-        // Update Firestore (instead of Google Sheets)
+        // 4) Update the background color
+        if (statusArray.includes(userUID)) {
+        resultDiv.style.backgroundColor = "darkgreen"; // Currently selected by this user
+        } else if (statusArray.length > 0) {
+        resultDiv.style.backgroundColor = "lightgreen"; // Selected by someone else
+        } else {
+        resultDiv.style.backgroundColor = ""; // Not selected by anyone
+        }
+
+        // 5) Firestore update
         try {
-        await updateGame(game, action);
+        await updateGame(game, action); 
+        // e.g., updateGame calls arrayUnion() or arrayRemove() for doc(db, "games", game.objectId)
         } catch (err) {
         console.error("Error updating game status in Firestore:", err);
         alert("Could not update status in Firestore. Please try again later.");
         }
 
-        // Update background color based on status
-        if (statusArray.includes(userUID)) {
-        // This user selected the game
-        resultDiv.style.backgroundColor = "darkgreen";
-        } else if (statusArray.length > 0) {
-        // At least one user selected it
-        resultDiv.style.backgroundColor = "lightgreen";
-        } else {
-        // No one selected it
-        resultDiv.style.backgroundColor = "";
-        }
-
-        // Reset animation flag after animation completes
+        // 6) Spin-grow animation, then release the animation flag
         resultDiv.style.animation = "spin-grow 1s linear forwards";
         resultDiv.addEventListener(
         "animationend",
-        function () {
+        function() {
             resultDiv.style.animation = "";
             game.animating = false;
         },
@@ -1047,7 +1032,6 @@ function createGameClickHandler(game, resultDiv) {
         );
     };
 }
-  
 
 function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
     return function() {
@@ -1085,7 +1069,7 @@ async function addGame(game) {
         name: game.name,
         thumbnail: game.thumbnail,
         newGame: game.newGame,
-        status: game.status || "[]",
+        status: Array.isArray(game.status) ? game.status : [],
         owners: [userUID]
         });
         console.log(`Created new doc: ${game.name} (${game.objectId})`);
