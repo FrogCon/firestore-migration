@@ -621,7 +621,7 @@ async function displayGamesTab() {
 
                 // Create a header for the owner's games
                 var ownerHeader = document.createElement('h2');
-                ownerHeader.innerHTML = `${currentOwner.charAt(0).toUpperCase()}${currentOwner.slice(1)}'s Games`;
+                ownerHeader.innerHTML = currentOwner;
                 ownerHeader.className = 'owner-header';
                 ownerHeader.onclick = createOwnerHeaderClickHandler(ownerHeader, ownerDiv);
 
@@ -1001,6 +1001,8 @@ function createGameClickHandler(game, resultDiv) {
         // 3) Update the game object in memory for immediate UI feedback
         //    (So subsequent clicks see the updated array.)
         game.status = statusArray;
+        // Update the user count indicator locally
+        updateUserCount(statusArray);
 
         // 4) Update the background color
         if (statusArray.includes(userUID)) {
