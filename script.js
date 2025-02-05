@@ -22,12 +22,14 @@ const auth = getAuth(); // Uses the app initialized in index.html
 const db = getFirestore(); // Uses the same app
 
 async function importDataToFirestore() {
-    const sheetURL = "https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec"; // Replace with your new Web App URL
+    const sheetURL = "https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec"; // Replace with your Web App URL
 
     try {
         const response = await fetch(sheetURL, {
             method: "GET",
-            headers: { "Content-Type": "application/json" }
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         if (!response.ok) {
