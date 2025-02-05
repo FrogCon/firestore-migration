@@ -22,14 +22,12 @@ const auth = getAuth(); // Uses the app initialized in index.html
 const db = getFirestore(); // Uses the same app
 
 async function importDataToFirestore() {
-    const sheetURL = "https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec"; // Replace with your Web App URL
+    const sheetURL = "https://winter-disk-5129.lucaskinoss.workers.dev/"; // Replace with your Cloudflare Worker URL
 
     try {
         const response = await fetch(sheetURL, {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
+            headers: { "Content-Type": "application/json" }
         });
 
         if (!response.ok) {
@@ -65,6 +63,7 @@ async function importDataToFirestore() {
         alert("Failed to import data. Check console for details.");
     }
 }
+
 
 // Authentication Functions
 function signUp(email, password) {
