@@ -571,7 +571,7 @@ async function displayGamesTab() {
 
     console.time("fetchAllGames");
     try {
-        const gamesData = await fetchAllGamesFromFirestore();
+        const gamesData = await fetchAllGames();
         console.timeEnd("fetchAllGames");
 
         const user = auth.currentUser || { email: "" };
