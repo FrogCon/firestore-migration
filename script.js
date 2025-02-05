@@ -795,7 +795,6 @@ async function displayGamesTab() {
             rowDiv.appendChild(resultDiv);
         });
 
-        console.timeEnd("processAndBuildDOM");
         hideLoadingOverlay();
 
         checkbox.addEventListener('change', function() {
@@ -985,61 +984,70 @@ function createRemoveClickHandler(game, resultDiv) {
 }
 
 function createGameClickHandler(game, resultDiv) {
-	return function () {
-		if (!isLoggedIn() || game.animating) return; // Prevent handling clicks if animation is ongoing
+    // Return an async function so we can use await
+    return async function () {
+        if (!isLoggedIn() || game.animating) return; // Prevent handling clicks if animation is ongoing
 
-	        const user = auth.currentUser;
-	
-	        game.animating = true; // Set the animating flag
-	
-	        // Parse the status array from the game's status field
-	        let statusArray = [];
-	        try {
-	            	statusArray = JSON.parse(game.status || "[]");
-	        } catch (error) {
-	            	console.error("Error parsing game status:", error);
-	        }
+        const userUID = auth.currentUser.uid;  // Use UID, not email
+        game.animating = true;                // Flag to avoid double clicks
 
-		var action = "remove";
-	        // Toggle the current user's email in the array
-	        if (statusArray.includes(user.email)) {
-	            	// Remove the user if already in the array
-	            	statusArray = statusArray.filter(email => email !== user.email);
-			action = "remove";
-	        } else {
-	            	// Add the user if not already in the array
-	            	statusArray.push(user.email);
-			action = "add";
-	        }
-	
-	        // Update the game.status to the updated array as a JSON string
-	        game.status = JSON.stringify(statusArray);
-		resultDiv.dataset.status = statusArray;
-	
-		// Send the updated status to Google Sheets
-	        updateGameInSheet(game, action);
-	
-	        // Update the background color based on the status
-	        if (statusArray.includes(user.email)) {
-	        	resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
-	        } else if (statusArray.length > 0) {
-	        	resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
-	        } else {
-	        	resultDiv.style.backgroundColor = ""; // Default background
-	        }
-	
-	        // Reset animation flag after animation completes
-	        resultDiv.style.animation = "spin-grow 1s linear forwards";
-	        resultDiv.addEventListener(
-			"animationend",
-			function () {
-				resultDiv.style.animation = "";
-				game.animating = false;
-			},
-			{ once: true }
-		);
-	};
+        // Parse the game.status array (which stores UIDs)
+        let statusArray = [];
+        try {
+        statusArray = JSON.parse(game.status || "[]");
+        } catch (error) {
+        console.error("Error parsing game status:", error);
+        }
+
+        let action = "remove";
+        // Toggle the current user's UID in the local status array
+        if (statusArray.includes(userUID)) {
+        // Remove the UID if already in the array
+        statusArray = statusArray.filter(uid => uid !== userUID);
+        action = "remove";
+        } else {
+        // Add the UID if not already in the array
+        statusArray.push(userUID);
+        action = "add";
+        }
+
+        // Update the game.status to the updated array as a JSON string
+        game.status = JSON.stringify(statusArray);
+        resultDiv.dataset.status = statusArray;
+
+        // Update Firestore (instead of Google Sheets)
+        try {
+        await updateGame(game, action);
+        } catch (err) {
+        console.error("Error updating game status in Firestore:", err);
+        alert("Could not update status in Firestore. Please try again later.");
+        }
+
+        // Update background color based on status
+        if (statusArray.includes(userUID)) {
+        // This user selected the game
+        resultDiv.style.backgroundColor = "darkgreen";
+        } else if (statusArray.length > 0) {
+        // At least one user selected it
+        resultDiv.style.backgroundColor = "lightgreen";
+        } else {
+        // No one selected it
+        resultDiv.style.backgroundColor = "";
+        }
+
+        // Reset animation flag after animation completes
+        resultDiv.style.animation = "spin-grow 1s linear forwards";
+        resultDiv.addEventListener(
+        "animationend",
+        function () {
+            resultDiv.style.animation = "";
+            game.animating = false;
+        },
+        { once: true }
+        );
+    };
 }
+  
 
 function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
     return function() {
@@ -1048,32 +1056,20 @@ function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
     };
 }
 
-function updateGameInSheet(game, action) {
-    const user = auth.currentUser;
-    const selectedLibrary = game.owner;
-    const url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
+async function updateGame(game, action) {
+    const userUID = auth.currentUser.uid;
+    const docRef = doc(db, "games", String(game.objectId));
 
-    const payload = {
-        action: "update",
-        objectId: game.objectId,
-        user: user.email,
-        change: action, // "add" or "remove"
-    };
-
-    fetch(url, {
-        method: "POST",
-        mode: 'no-cors',
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    })
-    .then(() => {
-        console.log(`Game status updated for ${game.name}: ${action}`);
-    })
-    .catch(error => {
-        console.error("Error updating game status:", error);
-    });
+    if (action === "add") {
+        await updateDoc(docRef, {
+        status: arrayUnion(userUID)
+        });
+    } else {
+        await updateDoc(docRef, {
+        status: arrayRemove(userUID)
+        });
+    }
+    console.log(`Game status updated in Firestore for ${game.name}: ${action}`);
 }
   
 // Simplified: no "first-time" check in here
