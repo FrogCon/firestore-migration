@@ -84,11 +84,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Open modal
-function openLoginModal() {
-    loginModal.style.display = "block";
-}
-
 // Close modal
 closeLoginModal.addEventListener("click", () => {
     loginModal.style.display = "none";
@@ -689,7 +684,7 @@ async function displayGamesTab() {
                 window.open(`https://boardgamegeek.com/boardgame/${game.objectId}`, '_blank');
                 hideOverlays(websiteOverlay, addActionOverlay);
                 // Re-enable showing overlays on click
-                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+                resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
                 event.stopPropagation(); // Prevent triggering clicks on underlying elements
             };
 
@@ -770,7 +765,7 @@ async function displayGamesTab() {
                 updateThumbColor();
                 updateUserCount(game.status || []);
                 // Re-enable showing overlays on click
-                resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+                resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
                 event.stopPropagation(); // Prevent triggering clicks on underlying elements
             };
 
@@ -779,7 +774,7 @@ async function displayGamesTab() {
             resultDiv.appendChild(addActionOverlay);
 
             // Initial click on the game item shows the overlays
-            resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
+            resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
 
             resultDiv.appendChild(thumbnailImg);
             resultDiv.appendChild(nameDiv);
@@ -812,7 +807,7 @@ async function displayGamesTab() {
     }
 }
 
-function showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay) {
+function showOverlaysFunction(websiteOverlay, addActionOverlay) {
     return function() {
         // If the clicked game is already showing its overlays, hide them
         if (currentActiveOverlays.websiteOverlay === websiteOverlay &&
@@ -988,48 +983,46 @@ function createGameClickHandler(game, resultDiv) {
         // 2) Determine whether we are adding or removing the current user
         let action;
         if (statusArray.includes(userUID)) {
-        // Remove user from status
-        statusArray = statusArray.filter(uid => uid !== userUID);
-        action = "remove";
+            // Remove user from status
+            statusArray = statusArray.filter(uid => uid !== userUID);
+            action = "remove";
         } else {
-        // Add user to status
-        statusArray.push(userUID);
-        action = "add";
+            // Add user to status
+            statusArray.push(userUID);
+            action = "add";
         }
 
         // 3) Update the game object in memory for immediate UI feedback
         //    (So subsequent clicks see the updated array.)
         game.status = statusArray;
-        // Update the user count indicator locally
-        updateUserCount(statusArray);
 
         // 4) Update the background color
         if (statusArray.includes(userUID)) {
-        resultDiv.style.backgroundColor = "darkgreen"; // Currently selected by this user
+            resultDiv.style.backgroundColor = "darkgreen"; // Currently selected by this user
         } else if (statusArray.length > 0) {
-        resultDiv.style.backgroundColor = "lightgreen"; // Selected by someone else
+            resultDiv.style.backgroundColor = "lightgreen"; // Selected by someone else
         } else {
-        resultDiv.style.backgroundColor = ""; // Not selected by anyone
+            resultDiv.style.backgroundColor = ""; // Not selected by anyone
         }
 
         // 5) Firestore update
         try {
-        await updateGame(game, action); 
-        // e.g., updateGame calls arrayUnion() or arrayRemove() for doc(db, "games", game.objectId)
+            await updateGame(game, action); 
+            // e.g., updateGame calls arrayUnion() or arrayRemove() for doc(db, "games", game.objectId)
         } catch (err) {
-        console.error("Error updating game status in Firestore:", err);
-        alert("Could not update status in Firestore. Please try again later.");
+            console.error("Error updating game status in Firestore:", err);
+            alert("Could not update status in Firestore. Please try again later.");
         }
 
         // 6) Spin-grow animation, then release the animation flag
         resultDiv.style.animation = "spin-grow 1s linear forwards";
         resultDiv.addEventListener(
-        "animationend",
-        function() {
-            resultDiv.style.animation = "";
-            game.animating = false;
-        },
-        { once: true }
+            "animationend",
+            function() {
+                resultDiv.style.animation = "";
+                game.animating = false;
+            },
+            { once: true }
         );
     };
 }
@@ -1082,15 +1075,6 @@ async function addGame(game) {
         console.log(`Added owner ${userUID} to: ${game.name} (${game.objectId})`);
     }
 }  
-
-async function userAlreadyOwnsGames(userUID) {
-    // Query "games" collection for docs where owners array-contains userUID
-    const q = query(collection(db, "games"), where("owners", "array-contains", userUID));
-    const snapshot = await getDocs(q);
-
-    // If snapshot is empty => user does not own any games
-    return !snapshot.empty;
-}
 
 async function removeGame(objectId) {
     const userUID = auth.currentUser.uid;
