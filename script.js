@@ -752,24 +752,16 @@ async function displayGamesTab() {
             
             // Append the indicator to the resultDiv
             resultDiv.appendChild(userCountIndicator);
-
-            // Function to update the user count and the indicator's visibility
-            function updateUserCount() {
-                const status = resultDiv.dataset.status || "";
-                const statusArray = status ? status.split(",") : []; // Split users by commas
-                userCountIndicator.textContent = statusArray.length; // Update the count
-                userCountIndicator.style.display = statusArray.length > 0 ? "flex" : "none"; // Hide if no users
-            }
             
             // Initial update of the user count
-            updateUserCount();
+            updateUserCount(game.status || []);
             
             // Click handler for the overlay
             addActionOverlay.onclick = function(event) {
                 createGameClickHandler(game, resultDiv)();
                 hideOverlays(websiteOverlay, addActionOverlay);
                 updateThumbColor();
-                updateUserCount();
+                updateUserCount(game.status || []);
                 // Re-enable showing overlays on click
                 resultDiv.onclick = showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay);
                 event.stopPropagation(); // Prevent triggering clicks on underlying elements
@@ -811,6 +803,13 @@ async function displayGamesTab() {
         alert("Failed to load games. Please try again later.");
         hideLoadingOverlay();
     }
+}
+
+// Function to update the user count and the indicator's visibility
+function updateUserCount(statusArray) {
+    const count = statusArray.length;
+    userCountIndicator.textContent = count;
+    userCountIndicator.style.display = (count > 0) ? 'flex' : 'none';
 }
 
 function showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay) {
