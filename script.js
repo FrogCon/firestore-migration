@@ -749,7 +749,7 @@ async function displayGamesTab() {
             resultDiv.appendChild(userCountIndicator);
             
             // Initial update of the user count
-            //updateUserCount(game.status || []);
+            updateUserCount(game.status || [], userCountIndicator);
             
             // Click handler for the overlay
             addActionOverlay.onclick = function(event) {
