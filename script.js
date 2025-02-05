@@ -436,14 +436,54 @@ async function fetchUserGames() {
     return gamesArray;
 }
 
-function fetchAllGames() {
-    var selectedLibrary = "ALLGAMESLIBRARY";
-    var url = `https://script.google.com/macros/s/AKfycbxlhxw69VE2Nx-_VaGzgRj1LcogTvmcfwjoQ0n9efEpDo0S1evEC1LlDZdQV8VjHdn-cQ/exec?library=${selectedLibrary}`;
+async function fetchAllGames() {
+    const gamesSnapshot = await getDocs(collection(db, "games"));
+    const allGameDocs = gamesSnapshot.docs.map(docSnap => docSnap.data());
 
-    return fetch(url)
-        .then(response => response.json())
-        .then(existingObjectIds => existingObjectIds)
-        .catch(error => console.error('Error:', error));
+    // 1) Collect all unique owner UIDs across all games
+    const uniqueOwnerUIDs = new Set();
+    allGameDocs.forEach(game => {
+        const ownersArray = game.owners || [];
+        ownersArray.forEach(uid => uniqueOwnerUIDs.add(uid));
+    });
+
+    // 2) For each unique UID, fetch their user doc (library name)
+    //    We'll build a uid -> libraryName map.
+    const uidArray = [...uniqueOwnerUIDs];  // convert Set to array
+    const userMap = {}; // { uid: libraryName }
+
+    // Load each user doc, if it exists
+    for (let uid of uidArray) {
+        const userDocRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+        const userData = userSnap.data();
+        userMap[uid] = userData.libraryName || "(No Library Name)";
+        } else {
+        // If no user doc found, fallback to some default
+        userMap[uid] = "(Unknown Owner)";
+        }
+    }
+
+    // 3) Flatten each game doc for each owner
+    //    So if a game has 2 owners, we create 2 output items
+    const output = [];
+    allGameDocs.forEach(gameDoc => {
+        const ownersArray = gameDoc.owners || [];
+        ownersArray.forEach(uid => {
+        // Build a single object with the shape your display code expects
+        output.push({
+            owner: userMap[uid],          // e.g. "Alice's Library"
+            name: gameDoc.name,
+            objectId: gameDoc.objectId,
+            thumbnail: gameDoc.thumbnail,
+            newGame: gameDoc.newGame || "",
+            status: gameDoc.status || "[]"
+        });
+        });
+    });
+
+    return output;
 }
 
 function fetchGameDetails(gameId) {
@@ -526,14 +566,15 @@ function displaySearchResults(data, button) {
     button.scrollIntoView({ behavior: 'smooth' });
 }
 
-function displayGamesTab() {
+async function displayGamesTab() {
     showLoadingOverlay();
 
     console.time("fetchAllGames");
-    fetchAllGames().then(gamesData => {
+    try {
+        const gamesData = await fetchAllGamesFromFirestore();
         console.timeEnd("fetchAllGames");
 
-        const user = auth.currentUser ? auth.currentUser : { email: "" };
+        const user = auth.currentUser || { email: "" };
         var gamesDiv = document.getElementById('Games');
         gamesDiv.innerHTML = '<h1>Make Your Selections</h1>'; // Clear previous content and add title
 
@@ -552,9 +593,6 @@ function displayGamesTab() {
         checkboxDiv.appendChild(checkbox);
         checkboxDiv.appendChild(label);
         gamesDiv.appendChild(checkboxDiv);
-
-        // Filter out LibraryMetadata entries
-        gamesData = gamesData.filter(game => game.owner.toLowerCase() !== "librarymetadata");
 
         // Sort the gamesData: Group by owner, new games first within each group, then alphabetically by name
         var sortedGames = gamesData.sort((a, b) => {
@@ -776,7 +814,11 @@ function displayGamesTab() {
                 }
             });
         });
-    });
+    } catch (error) {
+        console.error("Error fetching all games from Firestore:", error);
+        alert("Failed to load games. Please try again later.");
+        hideLoadingOverlay();
+    }
 }
 
 function showOverlaysFunction(resultDiv, websiteOverlay, addActionOverlay) {
