@@ -1,5 +1,3 @@
-var globalXmlData = null;
-var ownerGamesVisibility = {};
 var currentActiveOverlays = {
     websiteOverlay: null,
     addActionOverlay: null
@@ -562,6 +560,8 @@ function displaySearchResults(data, button) {
 }
 
 async function displayGamesTab() {
+    if (!isLoggedIn()) return;
+
     showLoadingOverlay();
 
     try {
@@ -747,23 +747,16 @@ async function displayGamesTab() {
             
             // Append the indicator to the resultDiv
             resultDiv.appendChild(userCountIndicator);
-
-            // Function to update the user count and the indicator's visibility
-            function updateUserCount(statusArray) {
-                const count = statusArray.length;
-                userCountIndicator.textContent = count;
-                userCountIndicator.style.display = (count > 0) ? 'flex' : 'none';
-            }              
             
             // Initial update of the user count
-            updateUserCount(game.status || []);
+            //updateUserCount(game.status || []);
             
             // Click handler for the overlay
             addActionOverlay.onclick = function(event) {
-                createGameClickHandler(game, resultDiv)();
+                createGameClickHandler(game, resultDiv, userCountIndicator)();
                 hideOverlays(websiteOverlay, addActionOverlay);
                 updateThumbColor();
-                updateUserCount(game.status || []);
+                //updateUserCount(game.status || []);
                 // Re-enable showing overlays on click
                 resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
                 event.stopPropagation(); // Prevent triggering clicks on underlying elements
@@ -805,6 +798,12 @@ async function displayGamesTab() {
         alert("Failed to load games. Please try again later.");
         hideLoadingOverlay();
     }
+}
+
+function updateUserCount(statusArray, userCountIndicator) {
+    const count = statusArray.length;
+    userCountIndicator.textContent = count;
+    userCountIndicator.style.display = count > 0 ? 'flex' : 'none';
 }
 
 function showOverlaysFunction(websiteOverlay, addActionOverlay) {
@@ -970,7 +969,7 @@ function createRemoveClickHandler(game, resultDiv) {
     };
 }
 
-function createGameClickHandler(game, resultDiv) {
+function createGameClickHandler(game, resultDiv, userCountIndicator) {
     return async function() {
         if (!isLoggedIn() || game.animating) return; // Prevent multiple clicks
         game.animating = true;
@@ -995,6 +994,9 @@ function createGameClickHandler(game, resultDiv) {
         // 3) Update the game object in memory for immediate UI feedback
         //    (So subsequent clicks see the updated array.)
         game.status = statusArray;
+
+        // Update the user count indicator **immediately**
+        updateUserCount(statusArray, userCountIndicator);
 
         // 4) Update the background color
         if (statusArray.includes(userUID)) {
