@@ -21,50 +21,6 @@ import { getFirestore, collection, doc, query, where, updateDoc, arrayRemove, ar
 const auth = getAuth(); // Uses the app initialized in index.html
 const db = getFirestore(); // Uses the same app
 
-async function importDataToFirestore() {
-    const sheetURL = "https://winter-disk-5129.lucaskinoss.workers.dev/"; // Replace with your Cloudflare Worker URL
-
-    try {
-        const response = await fetch(sheetURL, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        for (const item of data) {
-            if (!item.objectID) {
-                console.warn("Skipping entry without objectID:", item);
-                continue;
-            }
-
-            const ownersArray = item.owners ? item.owners.split(',').map(val => val.trim()) : [];
-            const statusArray = item.status ? item.status.split(',').map(val => val.trim()) : [];
-
-            const docRef = doc(db, "games", String(item.objectID));
-
-            await setDoc(docRef, {
-                ...item,
-                objectID: String(item.objectID),
-                owners: ownersArray,
-                status: statusArray
-            });
-
-            console.log(`Imported objectID: ${item.objectID}`);
-        }
-
-        alert("Google Sheets data imported into Firestore!");
-    } catch (error) {
-        console.error("Error importing data:", error);
-        alert("Failed to import data. Check console for details.");
-    }
-}
-
-
 // Authentication Functions
 function signUp(email, password) {
     createUserWithEmailAndPassword(auth, email, password)
@@ -303,7 +259,6 @@ document.getElementById("modifyGamesTab").addEventListener("click", (event) => o
 document.getElementById("getCollectionButton").addEventListener("click", getCollection);
 document.getElementById("searchGamesButton").addEventListener("click", () => searchGames(document.getElementById("searchGamesButton")));
 document.getElementById("searchLibraryButton").addEventListener("click", () => searchLibrary(document.getElementById("searchLibraryButton")));
-document.getElementById("importButton").addEventListener("click", importDataToFirestore);
 
 // Automatically open the default tab on page load
 document.getElementById("homeTab").click();
