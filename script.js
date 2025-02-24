@@ -448,16 +448,14 @@ async function fetchAllGames() {
         const objectId = gData.objectId;
   
         if (gameMap.has(objectId)) {
-          // Already seen this game – mark it as shared
-          const existing = gameMap.get(objectId);
-          if (!existing.sharedOwners) {
-            existing.sharedOwners = [ { ownerUID: existing.ownerUID, libraryName: existing.libraryName } ];
-          }
-          existing.sharedOwners.push({ ownerUID, libraryName });
-        } else {
-          // First time we see this game; assume it is individual for now
-          gameMap.set(objectId, gData);
-        }
+            const existing = gameMap.get(objectId);
+            if (!existing.sharedOwners) {
+              existing.sharedOwners = [{ ownerUID: existing.ownerUID, libraryName: existing.libraryName }];
+            }
+            existing.sharedOwners.push({ ownerUID: gData.ownerUID, libraryName: gData.libraryName });
+          } else {
+            gameMap.set(objectId, gData);
+          }          
       });
     }
     // Return as an array
