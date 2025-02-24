@@ -1083,7 +1083,8 @@ function sanitizeDocName(nameString) {
 
 async function updateGame(game, action) {
     const userUID = auth.currentUser.uid;
-    const docRef = doc(db, "games", String(game.objectId));
+    const docName = sanitizeDocName(game.name) + "_" + game.objectId;
+    const docRef = doc(db, userUID, docName);
 
     if (action === "add") {
         await updateDoc(docRef, {
