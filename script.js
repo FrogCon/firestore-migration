@@ -760,7 +760,7 @@ async function displayGamesTab() {
                 
                 sharedRowDiv.appendChild(resultDiv);
             });
-            sharedGamesDiv.appendChild(sharedRowDiv);
+            gamesDiv.appendChild(sharedRowDiv);
         }
 
         // --- Render Individual Libraries ---
