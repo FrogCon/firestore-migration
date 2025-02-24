@@ -1102,6 +1102,7 @@ async function addGame(game) {
     const userUID = auth.currentUser.uid;
     const docName = sanitizeDocName(game.name) + "_" + game.objectId;
     const docRef = doc(db, userUID, docName);
+    console.log(docRef);
 
     await setDoc(docRef, {
 	    name: game.name,
@@ -1117,6 +1118,7 @@ async function addGame(game) {
 async function removeGame(docName) {
   const userUID = auth.currentUser.uid;
   const docRef = doc(db, userUID, docName);
+  console.log(docRef);
 
   try {
     await deleteDoc(docRef);
