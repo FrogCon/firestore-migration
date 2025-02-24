@@ -455,7 +455,8 @@ async function fetchAllGames() {
             existing.sharedOwners.push({ ownerUID: gData.ownerUID, libraryName: gData.libraryName });
           } else {
             gameMap.set(objectId, gData);
-          }          
+          }
+          
       });
     }
     // Return as an array
@@ -579,14 +580,29 @@ async function displayGamesTab() {
             // Sort shared games alphabetically by name
             sharedGames.sort((a, b) => a.name.localeCompare(b.name));
             
+            // Create a container for the shared library
+            var sharedOwnerDiv = document.createElement('div');
+            sharedOwnerDiv.className = 'owner-games';
+            sharedOwnerDiv.style.display = 'none'; // collapsed by default
+
+            // Create a header for the shared library
             var sharedHeader = document.createElement('h2');
-            sharedHeader.textContent = "Shared Library";
+            sharedHeader.innerHTML = "Shared Library";
             sharedHeader.className = 'owner-header';
+            // Toggle the visibility of the sharedOwnerDiv when the header is clicked
+            sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedOwnerDiv);
+
+            // Append the header to the main container
             gamesDiv.appendChild(sharedHeader);
-            
+
+            // Create a single row for shared games and append it to the container
             var sharedRowDiv = document.createElement('div');
             sharedRowDiv.className = 'result-row';
-            sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedRowDiv);
+            sharedOwnerDiv.appendChild(sharedRowDiv);
+
+            // Finally, append the sharedOwnerDiv to the main container
+            gamesDiv.appendChild(sharedOwnerDiv);
+
 
             
             sharedGames.forEach(game => {
