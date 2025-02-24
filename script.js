@@ -576,55 +576,54 @@ async function displayGamesTab() {
 
         // --- Render the Shared Library ---
         if (sharedGames.length > 0) {
-            // Sort shared games alphabetically by name
-            sharedGames.sort((a, b) => a.name.localeCompare(b.name));
-            
-            var sharedHeader = document.createElement('h2');
-            sharedHeader.textContent = "Shared Library";
-            sharedHeader.className = 'owner-header';
-            // Optionally, you could add a click handler to expand/collapse
-            gamesDiv.appendChild(sharedHeader);
-            
-            var sharedRowDiv = document.createElement('div');
-            sharedRowDiv.className = 'result-row';
-            
-            sharedGames.forEach(game => {
-                // Create the game element (similar to below)
-                var resultDiv = document.createElement('div');
-                resultDiv.className = 'result-item';
-                
-                // (Set the background color based on status as before)
-                let statusArray = Array.isArray(game.status) ? game.status : [];
-                if (userUID && statusArray.includes(userUID)) {
-                    resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
-                } else if (statusArray.length > 0) {
-                    resultDiv.style.backgroundColor = "lightgreen";
-                } else {
-                    resultDiv.style.backgroundColor = "";
-                }
-                resultDiv.dataset.status = statusArray;
-                
-                // Build thumbnail and name elements
-                var thumbnailImg = document.createElement('img');
-                thumbnailImg.src = game.thumbnail;
-                thumbnailImg.alt = game.name;
-                thumbnailImg.className = 'thumbnail-img';
-
-                var nameDiv = document.createElement('div');
-                nameDiv.innerHTML = game.name;
-                nameDiv.className = 'game-name';
-
-                // (Add overlays and click handlers as in your original code)
-                // For brevity, we'll assume a helper function createGameElement(game) exists:
-                // resultDiv = createGameElement(game);
-                // Here we manually append thumbnail and name:
-                resultDiv.appendChild(thumbnailImg);
-                resultDiv.appendChild(nameDiv);
-                
-                sharedRowDiv.appendChild(resultDiv);
-            });
-            gamesDiv.appendChild(sharedRowDiv);
-        }
+	    // Sort shared games alphabetically by name
+	    sharedGames.sort((a, b) => a.name.localeCompare(b.name));
+	    
+	    // Create a header for the Shared Library
+	    var sharedHeader = document.createElement('h2');
+	    sharedHeader.textContent = "Shared Library";
+	    sharedHeader.className = 'owner-header';
+	    
+	    // Create a container for the shared games and collapse it by default
+	    var sharedContainer = document.createElement('div');
+	    sharedContainer.className = 'owner-games';
+	    sharedContainer.style.display = 'none';  // start collapsed
+	
+	    // Create a row container for shared games
+	    var sharedRowDiv = document.createElement('div');
+	    sharedRowDiv.className = 'result-row';
+	    
+	    sharedGames.forEach(game => {
+	        var resultDiv = document.createElement('div');
+	        resultDiv.className = 'result-item';
+	        
+	        // (Set resultDiv properties such as background color, overlays, etc.)
+	        // For example, create and append thumbnail and name:
+	        var thumbnailImg = document.createElement('img');
+	        thumbnailImg.src = game.thumbnail;
+	        thumbnailImg.alt = game.name;
+	        thumbnailImg.className = 'thumbnail-img';
+	
+	        var nameDiv = document.createElement('div');
+	        nameDiv.innerHTML = game.name;
+	        nameDiv.className = 'game-name';
+	
+	        resultDiv.appendChild(thumbnailImg);
+	        resultDiv.appendChild(nameDiv);
+	
+	        sharedRowDiv.appendChild(resultDiv);
+	    });
+	
+	    // Append the row into the container
+	    sharedContainer.appendChild(sharedRowDiv);
+	
+	    // Attach the collapse/expand click handler to the shared header
+	    sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedContainer);
+	
+	    // Append header and container to the main gamesDiv
+	    gamesDiv.appendChild(sharedHeader);
+	    gamesDiv.appendChild(sharedContainer);
+	}
 
         // --- Render Individual Libraries ---
         // Sort individual games by owner (libraryName), then newGame, then name.
