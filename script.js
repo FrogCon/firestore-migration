@@ -661,50 +661,95 @@ async function displayGamesTab() {
                 gamesDiv.appendChild(ownerDiv);
             }
 
-            var resultDiv = document.createElement('div');
-            resultDiv.className = 'result-item';
+            // Create the game container (resultDiv)
+		var resultDiv = document.createElement('div');
+		resultDiv.className = 'result-item';
+		
+		// Set up the status array and background color based on the current user
+		let statusArray = Array.isArray(game.status) ? game.status : [];
+		if (userUID && statusArray.includes(userUID)) {
+		    resultDiv.style.backgroundColor = "darkgreen"; // Current user selected
+		} else if (statusArray.length > 0) {
+		    resultDiv.style.backgroundColor = "lightgreen"; // At least one user selected
+		} else {
+		    resultDiv.style.backgroundColor = "";
+		}
+		resultDiv.dataset.status = statusArray;
+		
+		// Create and configure the website overlay (for viewing on BGG)
+		var websiteOverlay = document.createElement('div');
+		websiteOverlay.style = 'position: absolute; top: 0; left: 0; width: 100%; height: 50%; ' +
+		                       'background-color: rgba(255, 0, 0, 0.5); color: white; display: flex; ' +
+		                       'justify-content: center; align-items: center; display: none; ' +
+		                       'border-top-left-radius: 1rem; border-top-right-radius: 1rem; text-shadow: 2px 2px 4px #000000;';
+		var websiteText = document.createElement('span');
+		websiteText.textContent = 'View On BGG';
+		websiteText.style = 'background-color: rgba(0, 0, 0, 0.5); padding: 0.5rem 1rem; border-radius: 0.5rem;';
+		websiteOverlay.appendChild(websiteText);
+		websiteOverlay.onclick = function(event) {
+		    window.open(`https://boardgamegeek.com/boardgame/${game.objectId}`, '_blank');
+		    hideOverlays(websiteOverlay, addActionOverlay);
+		    resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
+		    event.stopPropagation();
+		};
+		
+		// Create and configure the add/remove overlay (for toggling selection)
+		var addActionOverlay = document.createElement('div');
+		addActionOverlay.style = 'position: absolute; bottom: 0; right: 0; width: 100%; height: 50%; ' +
+		                         'background-color: rgba(0, 255, 0, 0.5); color: white; display: flex; ' +
+		                         'justify-content: center; align-items: center; display: none; ' +
+		                         'border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; ' +
+		                         'text-shadow: 2px 2px 4px #000000;';
+		var addActionImage = document.createElement('img');
+		addActionImage.src = './thumbUp.png';
+		addActionImage.alt = 'Add/Remove';
+		addActionImage.style = 'width: 90px; height: 90px;';
+		addActionOverlay.appendChild(addActionImage);
+		
+		// Function to update the overlay icon color based on status
+		function updateThumbColor() {
+		    const status = resultDiv.dataset.status || "";
+		    const hasUsers = status.trim() !== "";
+		    addActionImage.style.filter = hasUsers ? "none" : "grayscale(100%)";
+		}
+		updateThumbColor();
+		
+		// Create a user count indicator (if needed)
+		var userCountIndicator = document.createElement('div');
+		userCountIndicator.style = 'position: absolute; top: 0px; right: 0px; width: 32px; height: 32px; ' +
+		                           'border-radius: 16px; background-color: rgba(0, 0, 0, 0.5); color: white; ' +
+		                           'display: flex; justify-content: center; align-items: center; font-weight: bold; ' +
+		                           'box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5);';
+		resultDiv.appendChild(userCountIndicator);
+		updateUserCount(game.status || [], userCountIndicator);
+		
+		// Attach the click handler for the add/remove action
+		addActionOverlay.onclick = function(event) {
+		    createGameClickHandler(game, resultDiv, userCountIndicator)();
+		    hideOverlays(websiteOverlay, addActionOverlay);
+		    updateThumbColor();
+		    resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
+		    event.stopPropagation();
+		};
+		
+		// Set the initial click on resultDiv to show the overlays
+		resultDiv.style.position = 'relative';
+		resultDiv.appendChild(websiteOverlay);
+		resultDiv.appendChild(addActionOverlay);
+		resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
+		
+		// Append the thumbnail and game name
+		var thumbnailImg = document.createElement('img');
+		thumbnailImg.src = game.thumbnail;
+		thumbnailImg.alt = game.name;
+		thumbnailImg.className = 'thumbnail-img';
+		resultDiv.appendChild(thumbnailImg);
+		
+		var nameDiv = document.createElement('div');
+		nameDiv.innerHTML = game.name;
+		nameDiv.className = 'game-name';
+		resultDiv.appendChild(nameDiv);
 
-            let statusArray = Array.isArray(game.status) ? game.status : [];
-            if (userUID && statusArray.includes(userUID)) {
-                resultDiv.style.backgroundColor = "darkgreen";
-            } else if (statusArray.length > 0) {
-                resultDiv.style.backgroundColor = "lightgreen";
-            } else {
-                resultDiv.style.backgroundColor = "";
-            }
-            resultDiv.dataset.status = statusArray;
-
-            var thumbnailImg = document.createElement('img');
-            thumbnailImg.src = game.thumbnail;
-            thumbnailImg.alt = game.name;
-            thumbnailImg.className = 'thumbnail-img';
-
-            var nameDiv = document.createElement('div');
-            nameDiv.innerHTML = game.name;
-            nameDiv.className = 'game-name';
-
-            if (game.newGame === "Y") {
-                const newGameIndicator = document.createElement('img');
-                newGameIndicator.src = './new.png';
-                newGameIndicator.alt = 'New Game';
-                newGameIndicator.style = `
-                    position: absolute; 
-                    top: -10px; 
-                    left: -10px; 
-                    width: 40px; 
-                    height: 40px;
-                `;
-                resultDiv.appendChild(newGameIndicator);
-            }
-
-            // (The rest of your overlay creation and click handling code goes here.)
-            // For example, creating websiteOverlay, addActionOverlay, etc.
-            // For brevity, we’ll assume that part remains unchanged.
-
-            resultDiv.appendChild(thumbnailImg);
-            resultDiv.appendChild(nameDiv);
-
-            rowDiv.appendChild(resultDiv);
         });
 
         hideLoadingOverlay();
