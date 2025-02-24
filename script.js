@@ -584,30 +584,26 @@ async function displayGamesTab() {
             var sharedOwnerDiv = document.createElement('div');
             sharedOwnerDiv.className = 'owner-games';
             sharedOwnerDiv.style.display = 'none';  // Collapsed by default
-
+        
             // Create a header for the shared library
             var sharedHeader = document.createElement('h2');
             sharedHeader.innerHTML = "Shared Library";
             sharedHeader.className = 'owner-header';
             sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedOwnerDiv);
-
+        
             // Append the header to the main container (gamesDiv)
             gamesDiv.appendChild(sharedHeader);
-
-            // Create a single rowDiv for the shared library games
+        
+            // Create a single row container for the shared library games
             var sharedRowDiv = document.createElement('div');
             sharedRowDiv.className = 'result-row';
-
-            // Append the rowDiv to the sharedOwnerDiv
+        
+            // Append the row container to the sharedOwnerDiv
             sharedOwnerDiv.appendChild(sharedRowDiv);
-
-            // Finally, append the sharedOwnerDiv to the main container (gamesDiv)
+        
+            // Append the sharedOwnerDiv to the main container (gamesDiv)
             gamesDiv.appendChild(sharedOwnerDiv);
-            //test
 
-
-
-            
             sharedGames.forEach(game => {
                 // Create the game element (similar to below)
                 var resultDiv = document.createElement('div');
@@ -633,11 +629,6 @@ async function displayGamesTab() {
                 var nameDiv = document.createElement('div');
                 nameDiv.innerHTML = game.name;
                 nameDiv.className = 'game-name';
-
-
-
-
-
 
                 if (game.newGame === "Y") {
                     // Create a "New Game" indicator
@@ -751,11 +742,6 @@ async function displayGamesTab() {
     
                 // Initial click on the game item shows the overlays
                 resultDiv.onclick = showOverlaysFunction(websiteOverlay, addActionOverlay);
-                
-
-
-
-
 
                 // Here we manually append thumbnail and name:
                 resultDiv.appendChild(thumbnailImg);
@@ -763,7 +749,6 @@ async function displayGamesTab() {
                 
                 sharedRowDiv.appendChild(resultDiv);
             });
-            gamesDiv.appendChild(sharedRowDiv);
         }
 
         // --- Render Individual Libraries ---
