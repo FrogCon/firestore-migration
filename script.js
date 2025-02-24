@@ -373,7 +373,7 @@ function prepareData(data) {
 
         gamesToRemove.forEach(game => {
             if (confirm(`Remove "${game.name}" from your ownership?`)) {
-            removeGame(game.objectId);
+            removeGame(game.docName);
             }
         });
 
@@ -407,29 +407,55 @@ function prepareData(data) {
     });
 }
   
-
 async function fetchUserGames() {
-    const userUID = auth.currentUser.uid;  // <-- get the UID, not email
-    const q = query(collection(db, "games"), where("owners", "array-contains", userUID));
-    const snapshot = await getDocs(q);
+  const userUID = auth.currentUser.uid;
+  const userCollectionRef = collection(db, userUID); 
+  const snapshot = await getDocs(userCollectionRef);
 
-    const gamesArray = [];
-    snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        gamesArray.push({
-            name: data.name,
-            objectId: data.objectId,
-            thumbnail: data.thumbnail,
-            status: data.status,
-            newGame: data.newGame,
-            owners: data.owners    // array of UIDs
-        });
+  const gamesArray = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    gamesArray.push({
+      name: data.name,
+      docName: docSnap.id,
+      objectId: data.objectId,
+      thumbnail: data.thumbnail,
+      newGame: data.newGame, 
+      status: data.status
     });
+  });
 
-    return gamesArray;
+  return gamesArray;
 }
 
 async function fetchAllGames() {
+  // 1) Get all user documents in the "users" collection
+  const usersSnapshot = await getDocs(collection(db, "users"));
+
+  let allGames = [];
+  // 2) For each user, load their top-level collection named after their UID
+  for (const userDoc of usersSnapshot.docs) {
+    const userUID = userDoc.id;  // e.g. "abc123UID"
+    const userGamesRef = collection(db, userUID);
+    const userGamesSnapshot = await getDocs(userGamesRef);
+
+    userGamesSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      // We can label who “owns” the game by including the userUID or a userName
+      allGames.push({
+        ownerUID: userUID,
+        name: data.name,
+        objectId: data.objectId,
+        thumbnail: data.thumbnail,
+        newGame: data.newGame || "N",
+        status: data.status || []
+      });
+    });
+  }
+  return allGames;
+}
+
+async function oldfetchAllGames() {
     const gamesSnapshot = await getDocs(collection(db, "games"));
     const allGameDocs = gamesSnapshot.docs.map(docSnap => docSnap.data());
 
@@ -877,7 +903,7 @@ function searchLibrary(button) {
                 nameDiv.className = 'game-name';
 
                 // Attach the remove user-ownership click handler
-                resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
+                resultDiv.onclick = createRemoveClickHandler(game.docName, resultDiv);
 
                 resultDiv.appendChild(thumbnailImg);
                 resultDiv.appendChild(nameDiv);
@@ -956,7 +982,7 @@ function createRemoveClickHandler(game, resultDiv) {
     if (!isLoggedIn()) return;
     
     return function() {
-        removeGame(game.objectId);
+        removeGame(game.docName);
 
         // Apply CSS animation
         resultDiv.style.backgroundColor = 'red';
@@ -1036,6 +1062,18 @@ function createOwnerHeaderClickHandler(ownerHeader, ownerDiv) {
     };
 }
 
+function sanitizeDocName(nameString) {
+  return nameString
+    .replace(/\//g, "-")
+    .replace(/\./g, "-")
+    .replace(/#/g, "-")
+    .replace(/\$/g, "-")
+    .replace(/\[/g, "-")
+    .replace(/\]/g, "-")
+    .replace(/\s+/g, "_")
+    .trim();
+}
+
 async function updateGame(game, action) {
     const userUID = auth.currentUser.uid;
     const docRef = doc(db, "games", String(game.objectId));
@@ -1055,54 +1093,30 @@ async function updateGame(game, action) {
 // Simplified: no "first-time" check in here
 async function addGame(game) {
     const userUID = auth.currentUser.uid;
-    const docRef = doc(db, "games", String(game.objectId));
-    const docSnap = await getDoc(docRef);
+    const docName = sanitizeDocName(game.name) + "_" + game.objectId;
+    const docRef = doc(db, userUID, docName);
 
-    if (!docSnap.exists()) {
-        // create brand new doc
-        await setDoc(docRef, {
-        objectId: game.objectId,
-        name: game.name,
-        thumbnail: game.thumbnail,
-        newGame: game.newGame,
-        status: Array.isArray(game.status) ? game.status : [],
-        owners: [userUID]
-        });
-        console.log(`Created new doc: ${game.name} (${game.objectId})`);
-    } else {
-        // doc exists, arrayUnion user to owners
-        await updateDoc(docRef, {
-        owners: arrayUnion(userUID)
-        });
-        console.log(`Added owner ${userUID} to: ${game.name} (${game.objectId})`);
-    }
-}  
-
-async function removeGame(objectId) {
-    const userUID = auth.currentUser.uid;
-    const docRef = doc(db, "games", String(objectId));
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-        console.warn(`Doc for objectId ${objectId} does not exist.`);
-        return;
-    }
-
-    // Remove the user from owners
-    await updateDoc(docRef, {
-        owners: arrayRemove(userUID)
+    await setDoc(docRef, {
+	    name: game.name,
+	    objectId: game.objectId,
+	    thumbnail: game.thumbnail,
+	    newGame: game.newGame || "N",
+	    status: []
     });
 
-    // Check if owners is now empty
-    const updatedSnap = await getDoc(docRef);
-    const updatedOwners = updatedSnap.data().owners || [];
-    if (updatedOwners.length === 0) {
-        // Optional: delete the document entirely if no owners remain
-        await deleteDoc(docRef);
-        console.log(`Deleted doc for objectId ${objectId}, as no owners remain.`);
-    } else {
-        console.log(`Removed UID ${userUID} from owners for objectId ${objectId}.`);
-    }
+    console.log(`Created/updated doc in top-level collection ${userUID}: ${docName}`);
+}
+
+async function removeGame(docName) {
+  const userUID = auth.currentUser.uid;
+  const docRef = doc(db, userUID, docName);
+
+  try {
+    await deleteDoc(docRef);
+    console.log(`Deleted doc '${docName}' from collection '${userUID}'`);
+  } catch (error) {
+    console.error(`Error deleting doc ${docName} in collection ${userUID}:`, error);
+  }
 }
 
 function showLoadingOverlay() {
