@@ -591,16 +591,19 @@ async function displayGamesTab() {
             sharedHeader.className = 'owner-header';
             sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedOwnerDiv);
 
-            // Append the header to the main container
+            // Append the header to the main container (gamesDiv)
             gamesDiv.appendChild(sharedHeader);
 
-            // Create a row container for the shared games
+            // Create a single rowDiv for the shared library games
             var sharedRowDiv = document.createElement('div');
             sharedRowDiv.className = 'result-row';
+
+            // Append the rowDiv to the sharedOwnerDiv
             sharedOwnerDiv.appendChild(sharedRowDiv);
 
-            // Append the shared library container to the main container
+            // Finally, append the sharedOwnerDiv to the main container (gamesDiv)
             gamesDiv.appendChild(sharedOwnerDiv);
+            //test
 
 
 
