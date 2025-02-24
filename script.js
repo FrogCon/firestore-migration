@@ -373,7 +373,7 @@ function prepareData(data) {
 
         gamesToRemove.forEach(game => {
             if (confirm(`Remove "${game.name}" from your ownership?`)) {
-            removeGame(game.docName);
+            removeGame(game);
             }
         });
 
@@ -910,7 +910,7 @@ function searchLibrary(button) {
                 nameDiv.className = 'game-name';
 
                 // Attach the remove user-ownership click handler
-                resultDiv.onclick = createRemoveClickHandler(game.docName, resultDiv);
+                resultDiv.onclick = createRemoveClickHandler(game, resultDiv);
 
                 resultDiv.appendChild(thumbnailImg);
                 resultDiv.appendChild(nameDiv);
@@ -989,7 +989,7 @@ function createRemoveClickHandler(game, resultDiv) {
     if (!isLoggedIn()) return;
     
     return function() {
-        removeGame(game.docName);
+        removeGame(game);
 
         // Apply CSS animation
         resultDiv.style.backgroundColor = 'red';
@@ -1102,7 +1102,6 @@ async function addGame(game) {
     const userUID = auth.currentUser.uid;
     const docName = sanitizeDocName(game.name) + "_" + game.objectId;
     const docRef = doc(db, userUID, docName);
-    console.log(docRef);
 
     await setDoc(docRef, {
 	    name: game.name,
@@ -1115,10 +1114,10 @@ async function addGame(game) {
     console.log(`Created/updated doc in top-level collection ${userUID}: ${docName}`);
 }
 
-async function removeGame(docName) {
+async function removeGame(game) {
   const userUID = auth.currentUser.uid;
+  const docName = sanitizeDocName(game.name) + "_" + game.objectId;
   const docRef = doc(db, userUID, docName);
-  console.log(docRef);
 
   try {
     await deleteDoc(docRef);
