@@ -580,28 +580,28 @@ async function displayGamesTab() {
             // Sort shared games alphabetically by name
             sharedGames.sort((a, b) => a.name.localeCompare(b.name));
             
-            // Create a container for the shared library
+            // Create a container for the shared library (collapsed by default)
             var sharedOwnerDiv = document.createElement('div');
             sharedOwnerDiv.className = 'owner-games';
-            sharedOwnerDiv.style.display = 'none'; // collapsed by default
+            sharedOwnerDiv.style.display = 'none';  // Collapsed by default
 
             // Create a header for the shared library
             var sharedHeader = document.createElement('h2');
             sharedHeader.innerHTML = "Shared Library";
             sharedHeader.className = 'owner-header';
-            // Toggle the visibility of the sharedOwnerDiv when the header is clicked
             sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedOwnerDiv);
 
             // Append the header to the main container
-            SharedGamesDiv.appendChild(sharedHeader);
+            gamesDiv.appendChild(sharedHeader);
 
-            // Create a single row for shared games and append it to the container
+            // Create a row container for the shared games
             var sharedRowDiv = document.createElement('div');
             sharedRowDiv.className = 'result-row';
             sharedOwnerDiv.appendChild(sharedRowDiv);
 
-            // Finally, append the sharedOwnerDiv to the main container
-            SharedGamesDiv.appendChild(sharedOwnerDiv);
+            // Append the shared library container to the main container
+            gamesDiv.appendChild(sharedOwnerDiv);
+
 
 
             
@@ -1322,8 +1322,12 @@ function searchLibrary(button) {
 }
 
 function toggleOwnerGames(ownerDiv) {
-    // Toggle showing or hiding the list of games for the owner
-    ownerDiv.style.display = ownerDiv.style.display === 'none' ? 'block' : 'none';
+    // Use a robust check for empty string or 'none'
+    if (!ownerDiv.style.display || ownerDiv.style.display === 'none') {
+      ownerDiv.style.display = 'block';
+    } else {
+      ownerDiv.style.display = 'none';
+    }
 }
 
 function createClickHandler(name, objectId, thumbnailImg, status, newGame, resultDiv) {
