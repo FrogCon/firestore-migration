@@ -429,30 +429,37 @@ async function fetchUserGames() {
 }
 
 async function fetchAllGames() {
-  // 1) Get all user documents in the "users" collection
-  const usersSnapshot = await getDocs(collection(db, "users"));
+    // 1) Load all user docs in "users"
+    const usersSnap = await getDocs(collection(db, "users"));
+    let output = [];
 
-  let allGames = [];
-  // 2) For each user, load their top-level collection named after their UID
-  for (const userDoc of usersSnapshot.docs) {
-    const userUID = userDoc.id;  // e.g. "abc123UID"
-    const userGamesRef = collection(db, userUID);
-    const userGamesSnapshot = await getDocs(userGamesRef);
+    // 2) For each user, read their personal top-level collection
+    for (const userDoc of usersSnap.docs) {
+        const userUID = userDoc.id; 
+        const userData = userDoc.data();
 
-    userGamesSnapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      // We can label who “owns” the game by including the userUID or a userName
-      allGames.push({
-        ownerUID: userUID,
-        name: data.name,
-        objectId: data.objectId,
-        thumbnail: data.thumbnail,
-        newGame: data.newGame || "N",
-        status: data.status || []
-      });
-    });
-  }
-  return allGames;
+        // The "friendly" name for the user’s library
+        const libraryName = userData.libraryName || "(No Library Name)";
+
+        // 3) Grab that user’s games from the top-level collection named by their UID
+        const userGamesSnap = await getDocs(collection(db, userUID));
+
+        // 4) For each doc in that user’s collection, build a single output entry
+        userGamesSnap.forEach(gameDoc => {
+            const gData = gameDoc.data();
+            output.push({
+                owner: libraryName,    // This is what displayGamesTab sorts by
+                ownerUID: userUID,     // If you need to know which UID it belongs to
+                name: gData.name,
+                objectId: gData.objectId,
+                thumbnail: gData.thumbnail,
+                newGame: gData.newGame || "N",
+                status: gData.status || []
+            });
+        });
+    }
+
+    return output;  
 }
 
 async function oldfetchAllGames() {
