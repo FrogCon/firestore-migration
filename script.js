@@ -940,7 +940,7 @@ async function displayGamesTab() {
 
 
 
-            
+
 
             resultDiv.appendChild(thumbnailImg);
             resultDiv.appendChild(nameDiv);
@@ -970,7 +970,7 @@ async function displayGamesTab() {
     }
 }
 
-async function displayGamesTab() {
+async function olddisplayGamesTab() {
     if (!isLoggedIn()) return;
 
     showLoadingOverlay();
