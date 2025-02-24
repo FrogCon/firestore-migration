@@ -577,8 +577,15 @@ async function displayGamesTab() {
 
         // --- Render the Shared Library ---
         if (sharedGames.length > 0) {
-            // Sort shared games alphabetically by name
-            sharedGames.sort((a, b) => a.name.localeCompare(b.name));
+            // Sort shared games
+            sharedGames.sort((a, b) => {
+                // If a is new and b is not, a comes first.
+                if (a.newGame === "Y" && b.newGame !== "Y") return -1;
+                // If b is new and a is not, b comes first.
+                if (a.newGame !== "Y" && b.newGame === "Y") return 1;
+                // Otherwise, sort alphabetically by name.
+                return a.name.localeCompare(b.name);
+              });              
             
             // Create a container for the shared library (collapsed by default)
             var sharedOwnerDiv = document.createElement('div');
