@@ -593,7 +593,7 @@ async function displayGamesTab() {
             sharedHeader.onclick = createOwnerHeaderClickHandler(sharedHeader, sharedOwnerDiv);
 
             // Append the header to the main container
-            gamesDiv.appendChild(sharedHeader);
+            SharedGamesDiv.appendChild(sharedHeader);
 
             // Create a single row for shared games and append it to the container
             var sharedRowDiv = document.createElement('div');
@@ -601,7 +601,7 @@ async function displayGamesTab() {
             sharedOwnerDiv.appendChild(sharedRowDiv);
 
             // Finally, append the sharedOwnerDiv to the main container
-            gamesDiv.appendChild(sharedOwnerDiv);
+            SharedGamesDiv.appendChild(sharedOwnerDiv);
 
 
             
@@ -760,7 +760,7 @@ async function displayGamesTab() {
                 
                 sharedRowDiv.appendChild(resultDiv);
             });
-            gamesDiv.appendChild(sharedRowDiv);
+            sharedGamesDiv.appendChild(sharedRowDiv);
         }
 
         // --- Render Individual Libraries ---
